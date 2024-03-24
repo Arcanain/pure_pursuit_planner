@@ -1,36 +1,34 @@
-## 機能概要 (Functional Overview)
-Pure Pursuitアルゴリズムを使用して、ロボットまたは自動運転車のパス追従制御を行うためのROS 2ノードである。指定された経路に沿ってロボットを効率的に追従するための速度と角速度の指令を計算し出力する。
-
+## Functional Overview
 This software implements a ROS 2 node for path following control of robots or autonomous vehicles using the Pure Pursuit algorithm. It calculates and outputs velocity and angular velocity commands to efficiently navigate the robot along a specified path.
 
-## IF表 (Interface Table)
+## Interface Table
 
 ### Input
 
-| 変数名 (Variable Name)      | 型 (Type)            | 説明 (Description)                         |
+| Variable Name      | Type            | Description                         |
 |-------------------------|-------------------|---------------------------------------|
-| `odom`                  | `nav_msgs::msg::Odometry` | ロボットのオドメトリ情報 (Odometry information of the robot) |
+| `odom`                  | `nav_msgs::msg::Odometry` | Odometry information of the robot |
 
 ### Output
 
-| 変数名 (Variable Name)      | 型 (Type)            | 説明 (Description)                         |
+| Variable Name      | Type            | Description                         |
 |-------------------------|-------------------|---------------------------------------|
-| `cmd_vel`               | `geometry_msgs::msg::Twist` | ロボットの速度と角速度の指令 (Velocity and angular velocity commands for the robot) |
-| `target_path`           | `nav_msgs::msg::Path` | 追従する経路 (Path to follow) |
+| `cmd_vel`               | `geometry_msgs::msg::Twist` | Velocity and angular velocity commands for the robot |
+| `target_path`           | `nav_msgs::msg::Path` | Path to follow |
 
 ### Internal Values
 
-| 変数名 (Variable Name)      | 型 (Type)            | 説明 (Description)                         |
+| Variable Name      | Type            | Description                         |
 |-------------------------|-------------------|---------------------------------------|
-| `x`, `y`, `yaw`         | `double`          | ロボットの現在位置と向き (Current position and orientation of the robot) |
-| `v`, `w`                | `double`          | ロボットの速度と角速度 (Velocity and angular velocity of the robot) |
-| `cx`, `cy`              | `std::vector<double>` | 経路のx座標とy座標のリスト (List of x and y coordinates of the path) |
-| `target_ind`            | `int`             | 現在のターゲットインデックス (Current target index) |
-| `target_vel`            | `double`          | 目標速度 (Target velocity) |
-| `goal_threshold`        | `double`          | ゴール判定のしきい値 (Threshold for goal judgment) |
-| `k`, `Lfc`, `Kp`, `dt`  | `double`          | Pure Pursuitパラメータ (Pure Pursuit parameters) |
-| `oldNearestPointIndex`  | `int`             | 前回の最近点インデックス (Index of the nearest point in the previous iteration) |
-| `current_vel`           | `double`          | ロボットの現在の速度 (Current velocity of the robot) |
+| `x`, `y`, `yaw`         | `double`          | Current position and orientation of the robot |
+| `v`, `w`                | `double`          | Velocity and angular velocity of the robot |
+| `cx`, `cy`              | `std::vector<double>` | List of x and y coordinates of the path |
+| `target_ind`            | `int`             | Current target index |
+| `target_vel`            | `double`          | Target velocity |
+| `goal_threshold`        | `double`          | Threshold for goal judgment |
+| `k`, `Lfc`, `Kp`, `dt`  | `double`          | Pure Pursuit parameters |
+| `oldNearestPointIndex`  | `int`             | Index of the nearest point in the previous iteration |
+| `current_vel`           | `double`          | Current velocity of the robot |
 
 ## システム構成図 (System Configuration Diagram)
 
