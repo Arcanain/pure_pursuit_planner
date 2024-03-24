@@ -34,6 +34,38 @@ This software implements a ROS 2 node for path following control of robots or au
 
 ## システム構成図 (System Configuration Diagram)
 
+```mermaid
+flowchart TD
+    A[Start] --> B[Initialize ROS 2 Node: pure_pursuit_planner]
+    B --> C[Create Publishers and Subscribers]
+    C --> D[Enter Timer Callback Loop]
+    D --> E[Update Control]
+    E --> F[Search Target Index]
+    F --> G[Pure Pursuit Control]
+    G --> H[Publish Command Velocity]
+    H --> I[Publish Target Path]
+    I --> J[Odometry Callback]
+    J --> D
+
+    subgraph PurePursuitNode
+        K[Constructor: Initialize Node and Topics]
+        L[updateControl: Main Logic for Velocity Command]
+        M[purePursuitControl: Calculate Steering and Velocity]
+        N[searchTargetIndex: Find Next Waypoint]
+        O[publishCmd: Publishes Velocity Command]
+        P[publishPath: Publishes Target Path for Visualization]
+        Q[odometry_callback: Updates Current Pose]
+        R[convertScanToPointCloud and performKMeansClustering: Not Implemented in This Snippet]
+    end
+
+    K --> L
+    L --> M
+    M --> N
+    N --> O
+    O --> P
+    P --> Q
+```
+
 ## 機能要件 (Functional Requirements)
 
 | 機能 (Feature)                    | 要件 (Requirement)                                     | 理由 (Reason)                                             | 仕様 (Specification)                                                                                                                                                                 | 実関数 (Implemented Functions)                          |
