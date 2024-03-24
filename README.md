@@ -73,14 +73,14 @@ flowchart TD
 | **Path Output**             | The robot needs to output the path to follow.             | To provide a reference path for navigation.                 | - Output each point of the path (`cx[i]`, `cy[i]`) as part of a `nav_msgs::msg::Path` message. Each point is stored as a `geometry_msgs::msg::PoseStamped` message.<br>(Implemented in `publishPath`) | `publishPath`                                  |
 | **Odometry Reception**      | The robot needs to receive odometry information.          | To update the current position and orientation of the robot. | - Extract the robot's current position (`x`, `y`) and orientation (`yaw`) from the received `nav_msgs::msg::Odometry` message and update the internal variables.<br>(Implemented in `odometry_callback`) | `odometry_callback`                           |
 
-## 詳細設計 (Detailed Design)
+## Detailed Design
 
-| メソッド名 (Method Name) | 目的 (Purpose)                           | 処理内容 (Process)                                                                                                          |
-|-----------------------|----------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
-| `updateControl`       | 制御ループを実行し、速度指令と追従経路を更新する。    | 1. `purePursuitControl`メソッドを呼び出して速度と角速度を計算する。<br>2. `publishCmd`メソッドを呼び出して速度指令をパブリッシュする。<br>3. `publishPath`メソッドを呼び出して追従経路をパブリッシュする。 |
-| `purePursuitControl`  | Pure Pursuitアルゴリズムに基づいて速度と角速度を計算する。 | 1. `searchTargetIndex`メソッドを呼び出してターゲットポイントのインデックスを探索する。<br>2. ターゲットポイントに対する角度を計算する。<br>3. 計算された角度とパラメータに基づいて速度と角速度を計算する。 |
-| `publishPath`         | 追従経路をパブリッシュする。                   | 1. `nav_msgs::msg::Path`メッセージを作成する。<br>2. 経路の各ポイントを`Path`メッセージに追加する。<br>3. `path_pub`を使用して`Path`メッセージをパブリッシュする。 |
-| `searchTargetIndex`   | ターゲットポイントのインデックスを探索する。             | 1. ロボットから一定距離 (`Lf`) 先にあるターゲットポイントのインデックスを探索する。<br>2. 距離は速度に応じて動的に変化する。 |
-| `calcDistance`        | 点とロボットの現在位置との距離を計算する。             | 1. ロボットの現在位置 (`x`, `y`) と指定された点 (`point_x`, `point_y`) とのユークリッド距離を計算する。 |
-| `odometry_callback`   | オドメトリ情報のコールバック関数。                | 1. 受信した`nav_msgs::msg::Odometry`メッセージからロボットの現在位置 (`x`, `y`) と向き (`yaw`) を抽出し、内部変数を更新する。 |
-| `publishCmd`          | 速度指令をパブリッシュする。                     | 1. `geometry_msgs::msg::Twist`メッセージを作成し、計算された速度 (`v`) と角速度 (`w`) を設定する。<br>2. `cmd_vel_pub`を使用して`Twist`メッセージをパブリッシュする。<br>3. ゴールに近づいた場合 (`goal_threshold` 未満) は速度と角速度をゼロにして停止する。 |
+| Method Name           | Purpose                                           | Process                                                                                                                                    |
+|-----------------------|---------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| `updateControl`       | To execute the control loop and update the velocity command and following path. | 1. Call the `purePursuitControl` method to calculate the velocity and angular velocity.<br>2. Call the `publishCmd` method to publish the velocity command.<br>3. Call the `publishPath` method to publish the following path. |
+| `purePursuitControl`  | To calculate the velocity and angular velocity based on the Pure Pursuit algorithm. | 1. Call the `searchTargetIndex` method to search for the index of the target point.<br>2. Calculate the angle to the target point.<br>3. Calculate the velocity and angular velocity based on the calculated angle and parameters. |
+| `publishPath`         | To publish the following path.                        | 1. Create a `nav_msgs::msg::Path` message.<br>2. Add each point of the path to the `Path` message.<br>3. Use `path_pub` to publish the `Path` message. |
+| `searchTargetIndex`   | To search for the index of the target point.         | 1. Search for the index of the target point that is a certain distance (`Lf`) ahead of the robot.<br>2. The distance dynamically changes according to the velocity. |
+| `calcDistance`        | To calculate the distance between a point and the robot's current position. | 1. Calculate the Euclidean distance between the robot's current position (`x`, `y`) and the specified point (`point_x`, `point_y`). |
+| `odometry_callback`   | Callback function for odometry information.          | 1. Extract the robot's current position (`x`, `y`) and orientation (`yaw`) from the received `nav_msgs::msg::Odometry` message and update the internal variables. |
+| `publishCmd`          | To publish the velocity command.                     | 1. Create a `geometry_msgs::msg::Twist` message and set the calculated velocity (`v`) and angular velocity (`w`).<br>2. Use `cmd_vel_pub` to publish the `Twist` message.<br>3. Stop by setting the velocity and angular velocity to zero if approaching the goal (`goal_threshold` or less). |
