@@ -13,9 +13,20 @@ find_package(nav_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 
-add_executable(pure_pursuit_planner src/pure_pursuit_planner.cpp)
-ament_target_dependencies(pure_pursuit_planner rclcpp geometry_msgs nav_msgs tf2_geometry_msgs tf2_ros)
+# add_executable(pure_pursuit_planner src/pure_pursuit_planner.cpp)
+# ament_target_dependencies(pure_pursuit_planner rclcpp geometry_msgs nav_msgs tf2_geometry_msgs tf2_ros)
 
+# pure_pursuit_planner
+add_executable(pure_pursuit_planner src/pure_pursuit_planner_node.cpp src/pure_pursuit_planner_component.cpp)
+ament_target_dependencies(pure_pursuit_planner rclcpp geometry_msgs nav_msgs tf2_geometry_msgs tf2_ros)
+target_include_directories(pure_pursuit_planner PUBLIC
+  include
+)
+# include_directories(
+#   include
+# )
+
+# Install Cpp executables
 install(TARGETS
   pure_pursuit_planner
   DESTINATION lib/${PROJECT_NAME}
