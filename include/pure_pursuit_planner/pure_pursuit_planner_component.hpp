@@ -25,7 +25,7 @@ private:
     std::pair<int, double> searchTargetIndex();
     double calcDistance(double point_x, double point_y) const;
     void odometry_callback(const nav_msgs::msg::Odometry::SharedPtr msg);
-
+    void publishCmd(double v, double w);
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub;
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub;
@@ -35,9 +35,13 @@ private:
     std::vector<double> cy;
     int target_ind;
     int oldNearestPointIndex;
-    double T;
-    double target_speed;
+    double target_vel;
+    double current_vel;
 
+    // check goal dist
+    double goal_threshold = 1.0; //[m]
+
+    // pure pursuit parameter
     const double k = 0.1; // look forward gain
     const double Lfc = 2.0; // [m] look-ahead distance
     const double Kp = 1.0; // speed proportional gain

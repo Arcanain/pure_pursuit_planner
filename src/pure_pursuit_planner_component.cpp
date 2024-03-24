@@ -10,8 +10,7 @@ PurePursuitNode::PurePursuitNode()
     cy = std::vector<double>(100);
     target_ind = 0;
     oldNearestPointIndex = -1;
-    T = 100.0;
-    target_speed = 10.0 / 3.6;
+    target_vel = 10.0 / 3.6;
 
     // Publisher
     cmd_vel_pub = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
@@ -30,19 +29,14 @@ PurePursuitNode::PurePursuitNode()
 }
 
 void PurePursuitNode::updateControl() {
-    if (T < 0 || target_ind >= static_cast<int>(cx.size()) - 1) {
-        rclcpp::shutdown();
-        return;
-    }
+    // if (T < 0 || target_ind >= static_cast<int>(cx.size()) - 1) {
+    //     rclcpp::shutdown();
+    //     return;
+    // }
 
     auto [v, w] = purePursuitControl(target_ind);
-    T -= dt;
 
-    geometry_msgs::msg::Twist cmd_vel_msg;
-    cmd_vel_msg.linear.x = v;
-    cmd_vel_msg.angular.z = w;
-    cmd_vel_pub->publish(cmd_vel_msg);
-
+    publishCmd(v, w);
     publishPath();
 }
 
@@ -64,7 +58,7 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
     }
 
     double alpha = std::atan2(ty - y, tx - x) - yaw;
-    double v = target_speed;
+    double v = target_vel;
     double w = v * std::tan(alpha) / Lf;
 
     pind = ind;
@@ -146,4 +140,26 @@ void PurePursuitNode::odometry_callback(const nav_msgs::msg::Odometry::SharedPtr
     mat.getRPY(roll_tmp, pitch_tmp, yaw_tmp);
 
     yaw = yaw_tmp;
+}
+
+void PurePursuitNode::publishCmd(double v, double w)
+{
+    geometry_msgs::msg::Twist cmd_vel_msg;
+
+    double goal_x = cx[cx.size() - 1];
+    double goal_y = cy[cy.size() - 1];
+    double goal_dist = std::abs(std::sqrt(std::pow((goal_x - x), 2.0) + std::pow((goal_y - y), 2.0)));
+
+    // goal judgement
+    if (goal_dist < goal_threshold) {
+        std::cout << "Goal!" << std::endl;
+
+        cmd_vel_msg.linear.x = 0.0;
+        cmd_vel_msg.angular.z = 0.0;
+    } else {
+        cmd_vel_msg.linear.x = v;
+        cmd_vel_msg.angular.z = w;
+    }
+
+    cmd_vel_pub->publish(cmd_vel_msg);
 }
