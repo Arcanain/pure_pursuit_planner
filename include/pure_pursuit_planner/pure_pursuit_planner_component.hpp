@@ -31,14 +31,12 @@ private:
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub;
     rclcpp::TimerBase::SharedPtr timer;
     double x, y, yaw, v, w;
-    // std::vector<double> cx;
-    // std::vector<double> cy;
-    std::vector<double> cx = std::vector<double>(100);
-    std::vector<double> cy = std::vector<double>(100);
-    int target_ind = 0;
-    int oldNearestPointIndex = -1;
-    double T = 100.0;
-    double target_speed = 10.0 / 3.6;
+    std::vector<double> cx;
+    std::vector<double> cy;
+    int target_ind;
+    int oldNearestPointIndex;
+    double T;
+    double target_speed;
 
     const double k = 0.1; // look forward gain
     const double Lfc = 2.0; // [m] look-ahead distance

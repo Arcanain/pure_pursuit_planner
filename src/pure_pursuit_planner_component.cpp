@@ -5,12 +5,23 @@ using namespace std::chrono_literals;
 
 PurePursuitNode::PurePursuitNode()
 : Node("pure_pursuit_planner") {
+    // Parameter setting
+    cx = std::vector<double>(100);
+    cy = std::vector<double>(100);
+    target_ind = 0;
+    oldNearestPointIndex = -1;
+    T = 100.0;
+    target_speed = 10.0 / 3.6;
+
+    // Publisher
     cmd_vel_pub = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
     path_pub = this->create_publisher<nav_msgs::msg::Path>("target_path", 10);
-    // odometoryのSubscribe
+
+    // Subscriber
     odom_sub = this->create_subscription<nav_msgs::msg::Odometry>(
     "odom", 10, std::bind(&PurePursuitNode::odometry_callback, this, _1));
-
+    
+    // Timer callback
     timer = this->create_wall_timer(std::chrono::milliseconds(static_cast<int>(dt * 1000)),
                                     std::bind(&PurePursuitNode::updateControl, this));
     std::iota(cx.begin(), cx.end(), 0.0);

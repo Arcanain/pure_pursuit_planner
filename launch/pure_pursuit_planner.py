@@ -45,38 +45,24 @@ def generate_launch_description():
         parameters=[{'joint_state_publisher': robot_description}]
     )
 
-    pure_pursuit_planner_node = Node(
-        package=package_name,
-        executable='pure_pursuit_planner',
-        output="screen",
-    )
-
     odometry_pub_node = Node(
         package=simulator_package,
         executable='odometry_pub',
         output="screen",
     )
 
-    # obstacle_pub_node = Node(
-    #     package=simulator_package,
-    #     executable='obstacle_pub',
-    #     output="screen",
-    # )
-
-    # waypoint_pub_node = Node(
-    #     package=simulator_package,
-    #     executable='waypoint_pub',
-    #     output="screen",
-    # )
+    pure_pursuit_planner_node = Node(
+        package=package_name,
+        executable='pure_pursuit_planner',
+        output="screen",
+    )
 
     nodes = [
         rviz_node,
         robot_description_rviz_node,
         joint_state_publisher_rviz_node,
-        pure_pursuit_planner_node,
         odometry_pub_node,
-        # obstacle_pub_node,
-        # waypoint_pub_node,
+        pure_pursuit_planner_node,
     ]
 
     return LaunchDescription(nodes)
