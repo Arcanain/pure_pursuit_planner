@@ -30,7 +30,7 @@ This software implements a ROS 2 node for path following control of robots or au
 | `oldNearestPointIndex`  | `int`             | Index of the nearest point in the previous iteration |
 | `current_vel`           | `double`          | Current velocity of the robot |
 
-## システム構成図 (System Configuration Diagram)
+## System Configuration Diagram
 
 ```mermaid
 flowchart TD
@@ -64,14 +64,14 @@ flowchart TD
     P --> Q
 ```
 
-## 機能要件 (Functional Requirements)
+## Functional Requirements
 
-| 機能 (Feature)                    | 要件 (Requirement)                                     | 理由 (Reason)                                             | 仕様 (Specification)                                                                                                                                                                 | 実関数 (Implemented Functions)                          |
-|---------------------------------|------------------------------------------------------|---------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------|
-| **パス追従制御 (Path Following Control)** | ロボットは指定された経路に沿って効率的に移動すること。 (The robot needs to efficiently move along the specified path.) | ロボットが目標に向かって正確に進むため。 (To ensure the robot accurately progresses towards the target.) | - Pure Pursuitアルゴリズムを使用して、ロボットの現在位置から見たターゲットポイントへの角度を計算し、それに基づいて速度と角速度を決定する。<br>(Implemented in `purePursuitControl`)<br>- 経路上でロボットから一定距離 (`Lf`) 先にあるターゲットポイントのインデックスを探索する。距離は速度に応じて動的に変化する。<br>(Implemented in `searchTargetIndex`) | `updateControl`, `purePursuitControl`, `searchTargetIndex` |
-| **速度指令出力 (Velocity Command Output)** | ロボットは計算された速度と角速度の指令を出力すること。 (The robot needs to output the computed velocity and angular velocity commands.) | ロボットが適切な速度で進むため。 (To ensure the robot progresses at the appropriate speed.) | - 計算された速度 (`v`) と角速度 (`w`) を`geometry_msgs::msg::Twist`メッセージとして出力する。<br>(Implemented in `publishCmd`)<br>- ゴールに近づいた場合 (`goal_threshold` 未満) は速度と角速度をゼロにして停止する。<br>(Implemented in `publishCmd`) | `publishCmd`                                   |
-| **経路出力 (Path Output)**              | ロボットは追従する経路を出力すること。 (The robot needs to output the path to follow.)               | ナビゲーションのための参照経路を提供するため。 (To provide a reference path for navigation.) | - 経路の各ポイント (`cx[i]`, `cy[i]`) を`nav_msgs::msg::Path`メッセージの一部として出力する。各ポイントは`geometry_msgs::msg::PoseStamped`メッセージとして格納される。<br>(Implemented in `publishPath`) | `publishPath`                                  |
-| **オドメトリ受信 (Odometry Reception)**  | ロボットはオドメトリ情報を受信すること。 (The robot needs to receive odometry information.)         | ロボットの現在位置と向きを更新するため。 (To update the current position and orientation of the robot.) | - 受信した`nav_msgs::msg::Odometry`メッセージからロボットの現在位置 (`x`, `y`) と向き (`yaw`) を抽出し、内部変数を更新する。<br>(Implemented in `odometry_callback`) | `odometry_callback`                           |
+| Feature                    | Requirement                                            | Reason                                                      | Specification                                                                                                                                                                | Implemented Functions                          |
+|----------------------------|--------------------------------------------------------|-------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------|
+| **Path Following Control** | The robot needs to efficiently move along the specified path. | To ensure the robot accurately progresses towards the target. | - Use the Pure Pursuit algorithm to calculate the angle to the target point from the robot's current position and determine the velocity and angular velocity based on that.<br>(Implemented in `purePursuitControl`)<br>- Search for the index of the target point on the path that is a certain distance (`Lf`) ahead of the robot. The distance dynamically changes according to the velocity.<br>(Implemented in `searchTargetIndex`) | `updateControl`, `purePursuitControl`, `searchTargetIndex` |
+| **Velocity Command Output** | The robot needs to output the computed velocity and angular velocity commands. | To ensure the robot progresses at the appropriate speed. | - Output the computed velocity (`v`) and angular velocity (`w`) as a `geometry_msgs::msg::Twist` message.<br>(Implemented in `publishCmd`)<br>- Stop by setting the velocity and angular velocity to zero if approaching the goal (`goal_threshold` or less).<br>(Implemented in `publishCmd`) | `publishCmd`                                   |
+| **Path Output**             | The robot needs to output the path to follow.             | To provide a reference path for navigation.                 | - Output each point of the path (`cx[i]`, `cy[i]`) as part of a `nav_msgs::msg::Path` message. Each point is stored as a `geometry_msgs::msg::PoseStamped` message.<br>(Implemented in `publishPath`) | `publishPath`                                  |
+| **Odometry Reception**      | The robot needs to receive odometry information.          | To update the current position and orientation of the robot. | - Extract the robot's current position (`x`, `y`) and orientation (`yaw`) from the received `nav_msgs::msg::Odometry` message and update the internal variables.<br>(Implemented in `odometry_callback`) | `odometry_callback`                           |
 
 ## 詳細設計 (Detailed Design)
 
