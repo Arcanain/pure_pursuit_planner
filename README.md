@@ -1,6 +1,5 @@
 ## 機能概要 (Functional Overview)
-Pure Pursuitアルゴリズムを使用して、ロボットまたは自動運転車のパス追従制御を行うためのROS 2ノードである。  
-指定された経路に沿ってロボットを効率的に追従するための速度と角速度の指令を計算し出力する。
+Pure Pursuitアルゴリズムを使用して、ロボットまたは自動運転車のパス追従制御を行うためのROS 2ノードである。指定された経路に沿ってロボットを効率的に追従するための速度と角速度の指令を計算し出力する。
 
 This software implements a ROS 2 node for path following control of robots or autonomous vehicles using the Pure Pursuit algorithm. It calculates and outputs velocity and angular velocity commands to efficiently navigate the robot along a specified path.
 
