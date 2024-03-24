@@ -1,100 +1,39 @@
-#include <rclcpp/rclcpp.hpp>
-#include <geometry_msgs/msg/twist.hpp>
-#include <nav_msgs/msg/path.hpp>
+#include "rclcpp/rclcpp.hpp"
+#include "geometry_msgs/msg/twist.hpp"
+#include "nav_msgs/msg/path.hpp"
+#include "nav_msgs/msg/odometry.hpp"
+#include "tf2/LinearMath/Quaternion.h"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+#include "tf2_ros/static_transform_broadcaster.h"
+#include "tf2_ros/transform_broadcaster.h"
 #include <vector>
 #include <cmath>
 #include <algorithm>
 #include <numeric>
+
+using std::placeholders::_1;
+using namespace std::chrono_literals;
 
 const double k = 0.1; // look forward gain
 const double Lfc = 2.0; // [m] look-ahead distance
 const double Kp = 1.0; // speed proportional gain
 const double dt = 0.1; // [s] time tick
 
-class RobotState {
-public:
-    double x, y, yaw, v, w;
-
-    RobotState(double x = 0.0, double y = 0.0, double yaw = 0.0, double v = 0.0, double w = 0.0)
-        : x(x), y(y), yaw(yaw), v(v), w(w) {}
-
-    void update(double v, double w) {
-        x += v * std::cos(yaw) * dt;
-        y += v * std::sin(yaw) * dt;
-        yaw += w * dt;
-        this->v = v;
-        this->w = w;
-    }
-
-    double calcDistance(double point_x, double point_y) const {
-        double dx = x - point_x;
-        double dy = y - point_y;
-        return std::hypot(dx, dy);
-    }
-
-};
-
-class TargetCourse {
-public:
-    std::vector<double> cx, cy;
-    int oldNearestPointIndex = -1;
-
-    TargetCourse(const std::vector<double>& cx, const std::vector<double>& cy)
-        : cx(cx), cy(cy) {}
-
-    std::pair<int, double> searchTargetIndex(const RobotState& state) {
-        if (oldNearestPointIndex == -1) {
-            std::vector<double> dx(cx.size()), dy(cy.size());
-            for (size_t i = 0; i < cx.size(); ++i) {
-                dx[i] = state.x - cx[i];
-                dy[i] = state.y - cy[i];
-            }
-            std::vector<double> d(dx.size());
-            std::transform(dx.begin(), dx.end(), dy.begin(), d.begin(), [](double dx, double dy) { return std::hypot(dx, dy); });
-            auto it = std::min_element(d.begin(), d.end());
-            oldNearestPointIndex = std::distance(d.begin(), it);
-        } else {
-            while (true) {
-                double distanceThisIndex = state.calcDistance(cx[oldNearestPointIndex], cy[oldNearestPointIndex]);
-                double distanceNextIndex = state.calcDistance(cx[oldNearestPointIndex + 1], cy[oldNearestPointIndex + 1]);
-                if (distanceThisIndex < distanceNextIndex) {
-                    break;
-                }
-                oldNearestPointIndex++;
-                if (oldNearestPointIndex >= static_cast<int>(cx.size()) - 1) {
-                    break;
-                }
-            }
-        }
-
-        double Lf = k * state.v + Lfc;
-
-        int ind = oldNearestPointIndex;
-        while (Lf > state.calcDistance(cx[ind], cy[ind])) {
-            if (ind + 1 >= static_cast<int>(cx.size())) {
-                break;
-            }
-            ind++;
-        }
-
-        return { ind, Lf };
-    }
-};
-
 class PurePursuitNode : public rclcpp::Node {
 public:
     PurePursuitNode()
-    : Node("pure_pursuit"), target_ind(0), T(100.0)
-    {
+    : Node("pure_pursuit"), target_ind(0), T(100.0) {
         cmd_vel_pub = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
         path_pub = this->create_publisher<nav_msgs::msg::Path>("target_path", 10);
+        // odometoryのSubscribe
+        odom_sub = this->create_subscription<nav_msgs::msg::Odometry>(
+        "odom", 10, std::bind(&PurePursuitNode::odometry_callback, this, _1));
 
         timer = this->create_wall_timer(std::chrono::milliseconds(static_cast<int>(dt * 1000)),
                                         std::bind(&PurePursuitNode::updateControl, this));
         std::iota(cx.begin(), cx.end(), 0.0);
         std::transform(cx.begin(), cx.end(), cy.begin(), [](double ix) { return std::sin(ix / 5.0) * ix / 2.0; });
-        target_course = std::make_unique<TargetCourse>(cx, cy);
-        std::tie(target_ind, std::ignore) = target_course->searchTargetIndex(state);
+        std::tie(target_ind, std::ignore) = searchTargetIndex();
     }
 
 private:
@@ -104,8 +43,7 @@ private:
             return;
         }
 
-        auto [v, w] = purePursuitControl(state, *target_course, target_ind);
-        state.update(v, w);
+        auto [v, w] = purePursuitControl(target_ind);
         T -= dt;
 
         geometry_msgs::msg::Twist cmd_vel_msg;
@@ -116,24 +54,24 @@ private:
         publishPath();
     }
 
-    std::pair<double, double> purePursuitControl(const RobotState& state, TargetCourse& trajectory, int& pind) {
-        auto [ind, Lf] = trajectory.searchTargetIndex(state);
+    std::pair<double, double> purePursuitControl(int& pind) {
+        auto [ind, Lf] = searchTargetIndex();
 
         if (pind >= ind) {
             ind = pind;
         }
 
         double tx, ty;
-        if (ind < static_cast<int>(trajectory.cx.size())) {
-            tx = trajectory.cx[ind];
-            ty = trajectory.cy[ind];
+        if (ind < static_cast<int>(cx.size())) {
+            tx =cx[ind];
+            ty = cy[ind];
         } else {
-            tx = trajectory.cx.back();
-            ty = trajectory.cy.back();
-            ind = static_cast<int>(trajectory.cx.size()) - 1;
+            tx = cx.back();
+            ty = cy.back();
+            ind = static_cast<int>(cx.size()) - 1;
         }
 
-        double alpha = std::atan2(ty - state.y, tx - state.x) - state.yaw;
+        double alpha = std::atan2(ty - y, tx - x) - yaw;
         double v = target_speed;
         double w = v * std::tan(alpha) / Lf;
 
@@ -159,15 +97,75 @@ private:
         path_pub->publish(path_msg);
     }
 
+    std::pair<int, double> searchTargetIndex() {
+        if (oldNearestPointIndex == -1) {
+            std::vector<double> dx(cx.size()), dy(cy.size());
+            for (size_t i = 0; i < cx.size(); ++i) {
+                dx[i] = x - cx[i];
+                dy[i] = y - cy[i];
+            }
+            std::vector<double> d(dx.size());
+            std::transform(dx.begin(), dx.end(), dy.begin(), d.begin(), [](double dx, double dy) { return std::hypot(dx, dy); });
+            auto it = std::min_element(d.begin(), d.end());
+            oldNearestPointIndex = std::distance(d.begin(), it);
+        } else {
+            while (true) {
+                double distanceThisIndex = calcDistance(cx[oldNearestPointIndex], cy[oldNearestPointIndex]);
+                double distanceNextIndex = calcDistance(cx[oldNearestPointIndex + 1], cy[oldNearestPointIndex + 1]);
+                if (distanceThisIndex < distanceNextIndex) {
+                    break;
+                }
+                oldNearestPointIndex++;
+                if (oldNearestPointIndex >= static_cast<int>(cx.size()) - 1) {
+                    break;
+                }
+            }
+        }
+
+        double Lf = k * v + Lfc;
+
+        int ind = oldNearestPointIndex;
+        while (Lf > calcDistance(cx[ind], cy[ind])) {
+            if (ind + 1 >= static_cast<int>(cx.size())) {
+                break;
+            }
+            ind++;
+        }
+
+        return { ind, Lf };
+    }
+
+    double calcDistance(double point_x, double point_y) const {
+        double dx = x - point_x;
+        double dy = y - point_y;
+        return std::hypot(dx, dy);
+    }
+
+    void odometry_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
+    {
+        // オドメトリからx, y, thetaを取得
+        x = msg->pose.pose.position.x;
+        y = msg->pose.pose.position.y;
+
+        tf2::Quaternion quat;
+        tf2::fromMsg(msg->pose.pose.orientation, quat);
+        tf2::Matrix3x3 mat(quat);
+        double roll_tmp, pitch_tmp, yaw_tmp;
+        mat.getRPY(roll_tmp, pitch_tmp, yaw_tmp);
+
+        yaw = yaw_tmp;
+    }
+
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub;
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub;
+    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub;
     rclcpp::TimerBase::SharedPtr timer;
-    RobotState state;
+    double x, y, yaw, v, w;
     std::vector<double> cx = std::vector<double>(100);
     std::vector<double> cy = std::vector<double>(100);
-    std::unique_ptr<TargetCourse> target_course;
     int target_ind;
-    double T;
+    int oldNearestPointIndex = -1;
+    double T = 100.0;
     const double target_speed = 10.0 / 3.6; // [m/s]
 };
 
