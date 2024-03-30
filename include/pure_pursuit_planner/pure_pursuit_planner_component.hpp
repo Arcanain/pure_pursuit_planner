@@ -13,16 +13,15 @@
 #include <cmath>
 #include <algorithm>
 #include <numeric>
-#include <fstream>
-#include <sstream>
-#include <vector>
-#include <string>
+#include <math.h>
 
 class PurePursuitNode : public rclcpp::Node {
 public:
     PurePursuitNode();
     std::vector<double> cx;
     std::vector<double> cy;
+    std::vector<double> cyaw;
+    std::vector<double> ck;
 
     // path subscribe flag
     bool path_subscribe_flag = false;
@@ -54,6 +53,12 @@ private:
     const double Lfc = 0.25; // [m] look-ahead distance
     const double Kp = 1.0; // speed proportional gain
     const double dt = 0.1; // [s] time tick
+
+    // cauvature parameter
+    double minCurvature = 0.0;
+    double maxCurvature = 3.0;
+    double minVelocity = 0.1;
+    double maxVelocity = 0.3;
 };
 
 #endif // PURE_PURSUIT_PLANNER_COMPONENT_HPP

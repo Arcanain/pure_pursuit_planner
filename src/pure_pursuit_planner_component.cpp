@@ -9,8 +9,6 @@ PurePursuitNode::PurePursuitNode()
     // Parameter setting
     target_ind = 0;
     oldNearestPointIndex = -1;
-    //target_vel = 10.0 / 3.6;
-    target_vel = 0.25;
 
     // Publisher
     cmd_vel_pub = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
@@ -28,13 +26,7 @@ PurePursuitNode::PurePursuitNode()
 }
 
 void PurePursuitNode::updateControl() {
-    // if (T < 0 || target_ind >= static_cast<int>(cx.size()) - 1) {
-    //     rclcpp::shutdown();
-    //     return;
-    // }
-
     auto [v, w] = purePursuitControl(target_ind);
-
     publishCmd(v, w);
 }
 
@@ -45,17 +37,24 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
         ind = pind;
     }
 
-    double tx, ty;
+    double target_lookahed_x, target_lookahed_y, target_curvature;
     if (ind < static_cast<int>(cx.size())) {
-        tx =cx[ind];
-        ty = cy[ind];
+        target_lookahed_x =cx[ind];
+        target_lookahed_y = cy[ind];
+        target_curvature = ck[ind];
     } else {
-        tx = cx.back();
-        ty = cy.back();
+        target_lookahed_x = cx.back();
+        target_lookahed_y = cy.back();
+        target_curvature = ck.back();
         ind = static_cast<int>(cx.size()) - 1;
     }
 
-    double alpha = std::atan2(ty - y, tx - x) - yaw;
+    // target speed
+    double curvature = std::max(minCurvature, std::min(abs(target_curvature), maxCurvature));
+    curvature = curvature / maxCurvature;
+    double target_vel = (maxVelocity - minVelocity) * pow(sin(acos(std::cbrt(curvature))), 3) + minVelocity; //[m/s]
+
+    double alpha = std::atan2(target_lookahed_y - y, target_lookahed_x - x) - yaw;
     double v = target_vel;
     double w = v * std::tan(alpha) / Lf;
 
@@ -128,6 +127,15 @@ void PurePursuitNode::path_callback(const nav_msgs::msg::Path::SharedPtr msg) {
         for (const auto& pose : msg->poses) {
             cx.push_back(pose.pose.position.x);
             cy.push_back(pose.pose.position.y);
+            ck.push_back(pose.pose.position.z);
+
+            tf2::Quaternion quat;
+            tf2::fromMsg(pose.pose.orientation, quat);
+            tf2::Matrix3x3 mat(quat);
+            double roll_rev, pitch_rev, yaw_rev;
+            mat.getRPY(roll_rev, pitch_rev, yaw_rev);
+            cyaw.push_back(yaw_rev);
+
             RCLCPP_INFO(this->get_logger(), "Received path point: (%f, %f)", pose.pose.position.x, pose.pose.position.y);
         }
 
