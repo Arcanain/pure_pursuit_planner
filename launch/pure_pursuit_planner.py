@@ -51,6 +51,19 @@ def generate_launch_description():
         output="screen",
     )
 
+    # path_smoother_node = Node(
+    #     package='path_smoother',
+    #     #executable='cubic_spline_2d_node',
+    #     executable='cubic_spline_node',
+    #     output="screen",
+    # )
+
+    path_publisher_node = Node(
+        package='path_smoother',
+        executable='path_publisher',
+        output="screen",
+    )
+
     pure_pursuit_planner_node = Node(
         package=package_name,
         executable='pure_pursuit_planner',
@@ -62,6 +75,8 @@ def generate_launch_description():
         robot_description_rviz_node,
         joint_state_publisher_rviz_node,
         odometry_pub_node,
+        # path_smoother_node,
+        path_publisher_node,
         pure_pursuit_planner_node,
     ]
 

@@ -13,11 +13,22 @@ find_package(nav_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 
+# other pakage
+#find_package(path_smoother REQUIRED)
+
 # pure_pursuit_planner
 add_executable(pure_pursuit_planner src/pure_pursuit_planner_node.cpp src/pure_pursuit_planner_component.cpp)
-ament_target_dependencies(pure_pursuit_planner rclcpp geometry_msgs nav_msgs tf2_geometry_msgs tf2_ros)
+ament_target_dependencies(pure_pursuit_planner
+  rclcpp 
+  geometry_msgs 
+  nav_msgs 
+  tf2_geometry_msgs 
+  tf2_ros
+  #path_smoother
+)
 target_include_directories(pure_pursuit_planner PUBLIC
   include
+  #${path_smoother_INCLUDE_DIRS}
 )
 
 # Install Cpp executables
@@ -32,6 +43,11 @@ install(DIRECTORY
   rviz
   DESTINATION share/${PROJECT_NAME}
 )
+
+#include_directories(${path_smoother_INCLUDE_DIRS})
+
+# include ディレクトリをエクスポート
+ament_export_include_directories(include)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
