@@ -1,3 +1,10 @@
+<p style="display: inline">
+  <!-- ROS 2 -->
+  <img src="https://img.shields.io/badge/-ROS%202-22314E.svg?logo=ros&style=for-the-badge&logoColor=white">
+  <!-- C++ -->
+  <img src="https://img.shields.io/badge/-C++-00599C.svg?logo=c%2B%2B&style=for-the-badge">
+</p>
+
 ## Functional Overview
 This software implements a ROS 2 node for path following control of robots or autonomous vehicles using the Pure Pursuit algorithm. It calculates and outputs velocity and angular velocity commands to efficiently navigate the robot along a specified path.
 
