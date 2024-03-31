@@ -62,30 +62,30 @@ flowchart TD
     B --> C[Create Publishers and Subscribers]
     C --> D[Enter Timer Callback Loop]
     D --> E[Update Control]
-    E --> F[Search Target Index]
-    F --> G[Pure Pursuit Control]
-    G --> H[Publish Command Velocity]
-    H --> I[Publish Target Path]
-    I --> J[Odometry Callback]
-    J --> D
+    E --> F[Pure Pursuit Control]
+    F --> G[Publish Command Velocity]
+    G --> H[Check if Goal is Reached]
+    H -->|No| I[Continue Path Tracking]
+    H -->|Yes| J[Stop the Robot]
+    I --> D
+    J --> K[End]
 
     subgraph PurePursuitNode
-        K[Constructor: Initialize Node and Topics]
-        L[updateControl: Main Logic for Velocity Command]
-        M[purePursuitControl: Calculate Steering and Velocity]
-        N[searchTargetIndex: Find Next Waypoint]
-        O[publishCmd: Publishes Velocity Command]
-        P[publishPath: Publishes Target Path for Visualization]
-        Q[odometry_callback: Updates Current Pose]
-        R[convertScanToPointCloud and performKMeansClustering: Not Implemented in This Snippet]
+        L[Constructor: Initialize Node, Topics, and Parameters]
+        M[odometry_callback: Update Robot State]
+        N[path_callback: Receive and Process Path]
+        O[updateControl: Timer Callback for Control Update]
+        P[purePursuitControl: Calculate Steering and Velocity]
+        Q[publishCmd: Publish Velocity Command to cmd_vel]
     end
 
-    K --> L
     L --> M
-    M --> N
-    N --> O
+    L --> N
+    M --> O
+    N -.-> O
     O --> P
     P --> Q
+
 ```
 
 ## Functional Requirements
