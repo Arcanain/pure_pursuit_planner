@@ -5,10 +5,14 @@ This software implements a ROS 2 node for path following control of robots or au
 
 ## Requirements
 ### System Requirements
-OS : Ubuntu 22.04  
-ROS2 : Humble
+- OS : Ubuntu 22.04  
+- ROS2 : Humble
 
-### Folder Structure
+### System Dependencies
+- [path_smoother](https://github.com/Arcanain/path_smoother) 
+- [arcanain_simulator](https://github.com/Arcanain/arcanain_simulator) 
+
+## Folder Structure
 ```
 pure_pursuit_planner/
 ├── include/                               - Directory for header files
