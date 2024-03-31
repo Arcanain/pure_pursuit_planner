@@ -24,7 +24,6 @@ pure_pursuit_planner/
 ├── CMakeLists.txt                         - CMake build configuration file
 └── package.xml                            - ROS 2 package metadata file
 ```
-
 ## Interface Table
 
 ### Input
@@ -54,7 +53,48 @@ pure_pursuit_planner/
 | `oldNearestPointIndex`  | `int`             | Index of the nearest point in the previous iteration |
 | `current_vel`           | `double`          | Current velocity of the robot |
 
-## System Configuration Diagram
+## Software architecture
+
+### Class Diagram
+
+```mermaid
+classDiagram
+    class PurePursuitNode {
+        +PurePursuitNode()
+        -void updateControl()
+        -std::pair<double, double> purePursuitControl(int&)
+        -std::pair<int, double> searchTargetIndex()
+        -double calcDistance(double, double) const
+        -void odometry_callback(nav_msgs::msg::Odometry::SharedPtr)
+        -void path_callback(nav_msgs::msg::Path::SharedPtr)
+        -void publishCmd(double, double)
+        -rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub
+        -rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub
+        -rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr path_sub
+        -rclcpp::TimerBase::SharedPtr timer
+        -std::vector<double> cx
+        -std::vector<double> cy
+        -std::vector<double> cyaw
+        -std::vector<double> ck
+        -double x, y, yaw, v, w
+        -int target_ind
+        -int oldNearestPointIndex
+        -double target_vel
+        -double current_vel
+        -bool path_subscribe_flag
+        -double goal_threshold
+        -const double k
+        -const double Lfc
+        -const double Kp
+        -const double dt
+        -double minCurvature
+        -double maxCurvature
+        -double minVelocity
+        -double maxVelocity
+    }
+```
+
+### flowchart
 
 ```mermaid
 flowchart TD
