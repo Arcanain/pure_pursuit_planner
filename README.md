@@ -31,13 +31,13 @@ pure_pursuit_planner/
 | Variable Name      | Type            | Description                         |
 |-------------------------|-------------------|---------------------------------------|
 | `odom`                  | `nav_msgs::msg::Odometry` | Odometry information of the robot |
+| `tgt_path`              | `nav_msgs::msg::Path` | Target trajectory of the robot |
 
 ### Output
 
 | Variable Name      | Type            | Description                         |
 |-------------------------|-------------------|---------------------------------------|
 | `cmd_vel`               | `geometry_msgs::msg::Twist` | Velocity and angular velocity commands for the robot |
-| `target_path`           | `nav_msgs::msg::Path` | Path to follow |
 
 ### Internal Values
 
@@ -45,13 +45,15 @@ pure_pursuit_planner/
 |-------------------------|-------------------|---------------------------------------|
 | `x`, `y`, `yaw`         | `double`          | Current position and orientation of the robot |
 | `v`, `w`                | `double`          | Velocity and angular velocity of the robot |
-| `cx`, `cy`              | `std::vector<double>` | List of x and y coordinates of the path |
+| `cx`, `cy`,`cyaw`, `ck` | `std::vector<double>` | List of x and y coordinates of the path |
 | `target_ind`            | `int`             | Current target index |
 | `target_vel`            | `double`          | Target velocity |
 | `goal_threshold`        | `double`          | Threshold for goal judgment |
 | `k`, `Lfc`, `Kp`, `dt`  | `double`          | Pure Pursuit parameters |
 | `oldNearestPointIndex`  | `int`             | Index of the nearest point in the previous iteration |
 | `current_vel`           | `double`          | Current velocity of the robot |
+| `minCurvature`,`maxCurvature`         | `double`          | Minimum and maximum curvature values |
+| `minVelocity`,`maxVelocity`           | `double`          | Minimum and maximum velocity values |
 
 ## Software architecture
 
