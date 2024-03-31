@@ -156,6 +156,79 @@ flowchart TD
 
 ```
 
+## System architecture
+
+```mermaid
+classDiagram
+    class PathPublisher {
+        +PathPublisher()
+        +void loadPathData(string&)
+        +void publishPath()
+        -rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_
+        -rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr visualize_path_pub_
+        -rclcpp::TimerBase::SharedPtr timer_
+        -nav_msgs::msg::Path path_
+        -nav_msgs::msg::Path visualize_path_
+    }
+    
+    class PurePursuitNode {
+        +PurePursuitNode()
+        -void updateControl()
+        -std::pair<double, double> purePursuitControl(int&)
+        -std::pair<int, double> searchTargetIndex()
+        -double calcDistance(double, double) const
+        -void odometry_callback(nav_msgs::msg::Odometry::SharedPtr)
+        -void path_callback(nav_msgs::msg::Path::SharedPtr)
+        -void publishCmd(double, double)
+        -rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub
+        -rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub
+        -rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr path_sub
+        -rclcpp::TimerBase::SharedPtr timer
+        -std::vector<double> cx
+        -std::vector<double> cy
+        -std::vector<double> cyaw
+        -std::vector<double> ck
+        -double x, y, yaw, v, w
+        -int target_ind
+        -int oldNearestPointIndex
+        -double target_vel
+        -double current_vel
+        -bool path_subscribe_flag
+        -double goal_threshold
+        -const double k
+        -const double Lfc
+        -const double Kp
+        -const double dt
+        -double minCurvature
+        -double maxCurvature
+        -double minVelocity
+        -double maxVelocity
+    }
+
+    PathPublisher --|> PurePursuitNode: path_
+
+    class OdometryPublisher {
+        -rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub
+        -rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub
+        -rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr localmap_pub
+        -rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr laser_range_pub
+        -rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_subscriber
+        -std::shared_ptr<tf2_ros::TransformBroadcaster> odom_broadcaster
+        -std::shared_ptr<tf2_ros::StaticTransformBroadcaster> static_broadcaster_
+        -rclcpp::TimerBase::SharedPtr timer_
+        -nav_msgs::msg::Path path
+        -double x, y, th, vx, vth
+        -rclcpp::Time current_time, last_time
+        +OdometryPublisher()
+        -void cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr)
+        -void timer_callback()
+        -void send_static_transform()
+    }
+
+    PurePursuitNode --|> OdometryPublisher: v, w
+    OdometryPublisher --|> PurePursuitNode: x, y, th
+```
+
 ## Functional Requirements
 
 | Feature                    | Requirement                                            | Reason                                                      | Specification                                                                                                                                                                | Implemented Functions                          |
