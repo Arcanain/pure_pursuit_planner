@@ -122,7 +122,7 @@ classDiagram
     }
 ```
 
-### flowchart
+### Flowchart
 
 ```mermaid
 flowchart TD
