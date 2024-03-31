@@ -25,7 +25,15 @@ This software implements a ROS 2 node for path following control of robots or au
 - [path_smoother](https://github.com/Arcanain/path_smoother) 
 - [arcanain_simulator](https://github.com/Arcanain/arcanain_simulator) 
 
-## Folder Structure
+## How To Use
+### Execution Steps
+```bash
+cd ~/ros2_ws
+source ~/ros2_ws/install/setup.bash
+ros2 launch pure_pursuit_planner pure_pursuit_planner.py
+```
+
+### Folder Structure
 ```
 pure_pursuit_planner/
 ├── include/                               - Directory for header files
@@ -41,6 +49,7 @@ pure_pursuit_planner/
 ├── CMakeLists.txt                         - CMake build configuration file
 └── package.xml                            - ROS 2 package metadata file
 ```
+
 ## Interface Table
 
 ### Input
