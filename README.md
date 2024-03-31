@@ -3,6 +3,28 @@ This software implements a ROS 2 node for path following control of robots or au
 
 ![Peek 2024-03-30 23-45](https://github.com/Arcanain/pure_pursuit_planner/assets/52307432/19483a1f-92bd-49bc-9e26-91188e22c41b)
 
+## Requirements
+### System Requirements
+OS : Ubuntu 22.04  
+ROS2 : Humble
+
+### Folder Structure
+```
+pure_pursuit_planner/
+├── include/                               - Directory for header files
+│   └── pure_pursuit_planner/              - Header files for the pure_pursuit_planner package
+│       └── pure_pursuit_planner_component.hpp - Header file for the Pure Pursuit planner component
+├── launch/                                - Directory for ROS 2 launch files
+│   └── pure_pursuit_planner.py            - Launch script for the pure_pursuit_planner node
+├── rviz/                                  - Directory for RViz configuration files
+│   └── pure_pursuit_planner.rviz          - RViz configuration file for the Pure Pursuit planner
+├── src/                                   - Directory for source files
+│   ├── pure_pursuit_planner_component.cpp - Implementation of the Pure Pursuit planner component
+│   └── pure_pursuit_planner_node.cpp      - Node implementation for the Pure Pursuit planner
+├── CMakeLists.txt                         - CMake build configuration file
+└── package.xml                            - ROS 2 package metadata file
+```
+
 ## Interface Table
 
 ### Input
