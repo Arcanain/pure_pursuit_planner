@@ -25,6 +25,7 @@ public:
 
     // path subscribe flag
     bool path_subscribe_flag = false;
+    bool odom_subscribe_flag = false;
 
 private:
     void updateControl();

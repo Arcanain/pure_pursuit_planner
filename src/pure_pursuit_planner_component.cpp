@@ -26,8 +26,19 @@ PurePursuitNode::PurePursuitNode()
 }
 
 void PurePursuitNode::updateControl() {
-    auto [v, w] = purePursuitControl(target_ind);
-    publishCmd(v, w);
+    /*
+    if (cx.empty() || cy.empty()) {
+        // エラーメッセージをログに記録する
+        RCLCPP_ERROR(this->get_logger(), "cx or cy is empty. Cannot proceed with searchTargetIndex.");
+        // デフォルトのインデックスとLfを返す（エラー処理が必要なら適切に調整）
+    }else{
+        auto [v, w] = purePursuitControl(target_ind);
+        publishCmd(v, w);
+    }*/
+    if (path_subscribe_flag && odom_subscribe_flag) {
+        auto [v, w] = purePursuitControl(target_ind);
+        publishCmd(v, w);
+    }
 }
 
 std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
@@ -119,6 +130,8 @@ void PurePursuitNode::odometry_callback(const nav_msgs::msg::Odometry::SharedPtr
     mat.getRPY(roll_tmp, pitch_tmp, yaw_tmp);
 
     yaw = yaw_tmp;
+
+    odom_subscribe_flag = true;
 }
 
 void PurePursuitNode::path_callback(const nav_msgs::msg::Path::SharedPtr msg) {
