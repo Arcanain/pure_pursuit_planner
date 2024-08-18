@@ -12,23 +12,66 @@ PurePursuitNode::PurePursuitNode()
 
     // Publisher
     cmd_vel_pub = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
+    look_ahead_range_pub = this->create_publisher<visualization_msgs::msg::Marker>(
+      "look_ahead_range_marker",
+      10);
 
+    obstacle_range_pub = this->create_publisher<visualization_msgs::msg::Marker>(
+      "obstacle_range_marker",
+      10);
+    
     // Subscriber
     odom_sub = this->create_subscription<nav_msgs::msg::Odometry>(
     "odom", 10, std::bind(&PurePursuitNode::odometry_callback, this, _1));
     path_sub = this->create_subscription<nav_msgs::msg::Path>(
             "tgt_path", 10,
             std::bind(&PurePursuitNode::path_callback, this, std::placeholders::_1));
-    
+
+    local_obstacle_sub = this->create_subscription<visualization_msgs::msg::MarkerArray>(
+            "local_obstacle_markers", 10,
+            std::bind(&PurePursuitNode::local_obstacle_callback, this, _1));
+
+    current_time = this->get_clock()->now();
     // Timer callback
     timer = this->create_wall_timer(std::chrono::milliseconds(static_cast<int>(dt * 1000)),
                                     std::bind(&PurePursuitNode::updateControl, this));
 }
 
 void PurePursuitNode::updateControl() {
+    current_time = this->get_clock()->now();
     if (path_subscribe_flag && odom_subscribe_flag) {
         auto [v, w] = purePursuitControl(target_ind);
         publishCmd(v, w);
+
+        // 円の線を描くマーカーを作成
+        visualization_msgs::msg::Marker line_strip_marker;
+        line_strip_marker.header.frame_id = "base_link";
+        line_strip_marker.header.stamp = current_time;
+        line_strip_marker.ns = "circle_line";
+        line_strip_marker.id = 1;
+        line_strip_marker.type = visualization_msgs::msg::Marker::LINE_STRIP;
+        line_strip_marker.action = visualization_msgs::msg::Marker::ADD;
+        line_strip_marker.pose.orientation.w = 1.0;
+        line_strip_marker.scale.x = 0.05;  // 線の太さ
+        line_strip_marker.color.r = 0.0;
+        line_strip_marker.color.g = 0.0;
+        line_strip_marker.color.b = 1.0;
+        line_strip_marker.color.a = 1.0;  // 不透明
+
+        // 円周上の点を追加
+        double radius = 1.0;
+        int num_points = 100;
+        for (int i = 0; i <= num_points; ++i) {
+        double angle = i * 2.0 * M_PI / num_points;
+        geometry_msgs::msg::Point p;
+        p.x = radius * cos(angle);
+        p.y = radius * sin(angle);
+        p.z = 0.0;
+        line_strip_marker.points.push_back(p);
+        }
+
+        // マーカーをパブリッシュ
+        look_ahead_range_pub->publish(line_strip_marker);
     }
 }
 
@@ -125,8 +168,55 @@ void PurePursuitNode::odometry_callback(const nav_msgs::msg::Odometry::SharedPtr
     odom_subscribe_flag = true;
 }
 
+void PurePursuitNode::local_obstacle_callback(const visualization_msgs::msg::MarkerArray::SharedPtr msg) {
+    for (const auto& marker : msg->markers) {
+        // 障害物の中心座標を取得
+        double obstacle_x = marker.pose.position.x;
+        double obstacle_y = marker.pose.position.y;
+
+        // 円を描くマーカーを作成
+        visualization_msgs::msg::Marker circle_marker;
+        circle_marker.header.frame_id = marker.header.frame_id; // 修正点
+        circle_marker.header.stamp = this->get_clock()->now();
+        circle_marker.ns = "obstacle_circle";
+        circle_marker.id = marker.id;  // 障害物IDと同じに設定
+        circle_marker.type = visualization_msgs::msg::Marker::LINE_STRIP;
+        circle_marker.action = visualization_msgs::msg::Marker::ADD;
+        circle_marker.pose.orientation.w = 1.0;
+        circle_marker.scale.x = 0.05;  // 線の太さ
+        circle_marker.color.r = 0.0;
+        circle_marker.color.g = 1.0;
+        circle_marker.color.b = 0.0;  // 青色
+        circle_marker.color.a = 1.0;  // 不透明
+
+        // 円周上の点を追加
+        double radius = 1.0;  // 円の半径
+        int num_points = 100; // 円周上の点の数
+        for (int i = 0; i <= num_points; ++i) {
+            double angle = i * 2.0 * M_PI / num_points;
+            geometry_msgs::msg::Point p;
+            p.x = obstacle_x + radius * cos(angle);
+            p.y = obstacle_y + radius * sin(angle);
+            p.z = 0.0;
+            circle_marker.points.push_back(p);
+        }
+
+        // 円を閉じるために最初の点を再度追加
+        circle_marker.points.push_back(circle_marker.points.front());
+
+        // マーカーをパブリッシュ
+        obstacle_range_pub->publish(circle_marker);
+    }
+}
+
+
 void PurePursuitNode::path_callback(const nav_msgs::msg::Path::SharedPtr msg) {
     if (!path_subscribe_flag) {
+        // 以前のパス情報をクリア
+        cx.clear();
+        cy.clear();
+        ck.clear();
+        cyaw.clear();
         // 受け取ったパスメッセージから座標を抽出
         for (const auto& pose : msg->poses) {
             cx.push_back(pose.pose.position.x);
