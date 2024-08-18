@@ -26,15 +26,6 @@ PurePursuitNode::PurePursuitNode()
 }
 
 void PurePursuitNode::updateControl() {
-    /*
-    if (cx.empty() || cy.empty()) {
-        // エラーメッセージをログに記録する
-        RCLCPP_ERROR(this->get_logger(), "cx or cy is empty. Cannot proceed with searchTargetIndex.");
-        // デフォルトのインデックスとLfを返す（エラー処理が必要なら適切に調整）
-    }else{
-        auto [v, w] = purePursuitControl(target_ind);
-        publishCmd(v, w);
-    }*/
     if (path_subscribe_flag && odom_subscribe_flag) {
         auto [v, w] = purePursuitControl(target_ind);
         publishCmd(v, w);
