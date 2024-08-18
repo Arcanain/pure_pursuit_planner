@@ -56,6 +56,12 @@ def generate_launch_description():
         executable='path_publisher',
         output="screen",
     )
+    
+    path_smoother_node = Node(
+        package='path_smoother',
+        executable='cubic_spline_node',
+        output="screen",
+    )
 
     pure_pursuit_planner_node = Node(
         package=package_name,
