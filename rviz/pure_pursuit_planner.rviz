@@ -10,6 +10,7 @@ Panels:
         - /MarkerArray2
         - /Marker1
         - /Marker1/Topic1
+        - /Marker2
       Splitter Ratio: 0.5
     Tree Height: 719
   - Class: rviz_common/Selection
@@ -193,6 +194,19 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /laser_range_marker
+      Value: true
+    - Class: rviz_default_plugins/Marker
+      Enabled: true
+      Name: Marker
+      Namespaces:
+        obstacle_circle: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /obstacle_range_marker
       Value: true
   Enabled: true
   Global Options:
