@@ -30,6 +30,10 @@ PurePursuitNode::PurePursuitNode()
     local_obstacle_sub = this->create_subscription<visualization_msgs::msg::MarkerArray>(
             "local_obstacle_markers", 10,
             std::bind(&PurePursuitNode::local_obstacle_callback, this, _1));
+    
+    obstacle_detected_sub = this->create_subscription<std_msgs::msg::Bool>(
+            "obstacle_detected", 10,
+            std::bind(&PurePursuitNode::obstacle_detected_callback, this, _1));
 
     current_time = this->get_clock()->now();
     // Timer callback
@@ -168,44 +172,62 @@ void PurePursuitNode::odometry_callback(const nav_msgs::msg::Odometry::SharedPtr
     odom_subscribe_flag = true;
 }
 
+void PurePursuitNode::obstacle_detected_callback(const std_msgs::msg::Bool::SharedPtr msg){
+    obstacle_detected = msg->data;
+}
+
 void PurePursuitNode::local_obstacle_callback(const visualization_msgs::msg::MarkerArray::SharedPtr msg) {
-    for (const auto& marker : msg->markers) {
-        // 障害物の中心座標を取得
-        double obstacle_x = marker.pose.position.x;
-        double obstacle_y = marker.pose.position.y;
+    //RCLCPP_INFO(this->get_logger(), "obstacle_detected_flag: %s", obstacle_detected ? "true" : "false");
+    if (obstacle_detected){
+        for (const auto& marker : msg->markers) {
+            
+            // 障害物の中心座標を取得
+            double obstacle_x = marker.pose.position.x;
+            double obstacle_y = marker.pose.position.y;
 
-        // 円を描くマーカーを作成
-        visualization_msgs::msg::Marker circle_marker;
-        circle_marker.header.frame_id = marker.header.frame_id; // 修正点
-        circle_marker.header.stamp = this->get_clock()->now();
-        circle_marker.ns = "obstacle_circle";
-        circle_marker.id = marker.id;  // 障害物IDと同じに設定
-        circle_marker.type = visualization_msgs::msg::Marker::LINE_STRIP;
-        circle_marker.action = visualization_msgs::msg::Marker::ADD;
-        circle_marker.pose.orientation.w = 1.0;
-        circle_marker.scale.x = 0.05;  // 線の太さ
-        circle_marker.color.r = 0.0;
-        circle_marker.color.g = 1.0;
-        circle_marker.color.b = 0.0;  // 青色
-        circle_marker.color.a = 1.0;  // 不透明
+            // 円を描くマーカーを作成
+            visualization_msgs::msg::Marker circle_marker;
+            circle_marker.header.frame_id = marker.header.frame_id; // 修正点
+            circle_marker.header.stamp = this->get_clock()->now();
+            circle_marker.ns = "obstacle_circle";
+            circle_marker.id = marker.id;  // 障害物IDと同じに設定
+            circle_marker.type = visualization_msgs::msg::Marker::LINE_STRIP;
+            circle_marker.action = visualization_msgs::msg::Marker::ADD;
+            circle_marker.pose.orientation.w = 1.0;
+            circle_marker.scale.x = 0.05;  // 線の太さ
+            circle_marker.color.r = 0.0;
+            circle_marker.color.g = 1.0;
+            circle_marker.color.b = 0.0;  
+            circle_marker.color.a = 1.0;  // 不透明
 
-        // 円周上の点を追加
-        double radius = 1.0;  // 円の半径
-        int num_points = 100; // 円周上の点の数
-        for (int i = 0; i <= num_points; ++i) {
-            double angle = i * 2.0 * M_PI / num_points;
-            geometry_msgs::msg::Point p;
-            p.x = obstacle_x + radius * cos(angle);
-            p.y = obstacle_y + radius * sin(angle);
-            p.z = 0.0;
-            circle_marker.points.push_back(p);
+            // 円周上の点を追加
+            double radius = 0.3;  // 円の半径
+            int num_points = 100; // 円周上の点の数
+            for (int i = 0; i <= num_points; ++i) {
+                double angle = i * 2.0 * M_PI / num_points;
+                geometry_msgs::msg::Point p;
+                p.x = obstacle_x + radius * cos(angle);
+                p.y = obstacle_y + radius * sin(angle);
+                p.z = 0.0;
+                circle_marker.points.push_back(p);
+            }
+
+            // 円を閉じるために最初の点を再度追加
+            circle_marker.points.push_back(circle_marker.points.front());
+
+            // マーカーをパブリッシュ
+            obstacle_range_pub->publish(circle_marker);
         }
+    }
+    else{
+            // Create and publish a DELETEALL marker individually
+        visualization_msgs::msg::Marker delete_marker;
+        delete_marker.header.frame_id = "map";
+        delete_marker.header.stamp = this->get_clock()->now();
+        delete_marker.action = visualization_msgs::msg::Marker::DELETEALL;
 
-        // 円を閉じるために最初の点を再度追加
-        circle_marker.points.push_back(circle_marker.points.front());
+        obstacle_range_pub->publish(delete_marker);
 
-        // マーカーをパブリッシュ
-        obstacle_range_pub->publish(circle_marker);
     }
 }
 

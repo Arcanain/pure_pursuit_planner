@@ -11,6 +11,7 @@
 #include "tf2_ros/transform_broadcaster.h"
 #include "visualization_msgs/msg/marker.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
+#include "std_msgs/msg/bool.hpp"
 
 #include <vector>
 #include <cmath>
@@ -29,6 +30,7 @@ public:
     // path subscribe flag
     bool path_subscribe_flag = false;
     bool odom_subscribe_flag = false;
+    bool obstacle_detected = false;
 
 private:
     void updateControl();
@@ -38,6 +40,7 @@ private:
     void odometry_callback(const nav_msgs::msg::Odometry::SharedPtr msg);
     void path_callback(const nav_msgs::msg::Path::SharedPtr msg);
     void local_obstacle_callback(const visualization_msgs::msg::MarkerArray::SharedPtr msg);
+    void obstacle_detected_callback(const std_msgs::msg::Bool::SharedPtr msg);
     void publishCmd(double v, double w);
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub;
@@ -45,7 +48,7 @@ private:
     rclcpp::Subscription<visualization_msgs::msg::MarkerArray>::SharedPtr local_obstacle_sub;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr look_ahead_range_pub;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr obstacle_range_pub;
-    
+    rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr obstacle_detected_sub;
     rclcpp::TimerBase::SharedPtr timer;
     rclcpp::Time current_time;
     double x, y, yaw, v, w;
