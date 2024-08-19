@@ -23,6 +23,10 @@ PurePursuitNode::PurePursuitNode()
     // Subscriber
     odom_sub = this->create_subscription<nav_msgs::msg::Odometry>(
     "odom", 10, std::bind(&PurePursuitNode::odometry_callback, this, _1));
+    
+    imu_sub = this->create_subscription<sensor_msgs::msg::Imu>(
+    "imu_data_raw", 10, std::bind(&PurePursuitNode::imu_callback, this, _1));
+
     path_sub = this->create_subscription<nav_msgs::msg::Path>(
             "tgt_path", 10,
             std::bind(&PurePursuitNode::path_callback, this, std::placeholders::_1));
@@ -156,16 +160,31 @@ void PurePursuitNode::odometry_callback(const nav_msgs::msg::Odometry::SharedPtr
     // オドメトリからx, y, thetaを取得
     x = msg->pose.pose.position.x;
     y = msg->pose.pose.position.y;
-
+    /*
     tf2::Quaternion quat;
     tf2::fromMsg(msg->pose.pose.orientation, quat);
     tf2::Matrix3x3 mat(quat);
     double roll_tmp, pitch_tmp, yaw_tmp;
     mat.getRPY(roll_tmp, pitch_tmp, yaw_tmp);
-
+    
     yaw = yaw_tmp;
-
+    */
     odom_subscribe_flag = true;
+}
+
+void PurePursuitNode::imu_callback(const sensor_msgs::msg::Imu::SharedPtr msg)
+{
+    // IMUデータからクォータニオンを取得
+    tf2::Quaternion quat;
+    tf2::fromMsg(msg->orientation, quat);
+
+    // クォータニオンをオイラー角に変換し、ヨー角を取得
+    tf2::Matrix3x3 mat(quat);
+    double roll_tmp, pitch_tmp, yaw_tmp;
+    mat.getRPY(roll_tmp, pitch_tmp, yaw_tmp);
+
+    // ヨー角をセット
+    yaw = yaw_tmp;
 }
 
 void PurePursuitNode::local_obstacle_callback(const visualization_msgs::msg::MarkerArray::SharedPtr msg) {
@@ -255,8 +274,10 @@ void PurePursuitNode::publishCmd(double v, double w)
         cmd_vel_msg.linear.x = 0.0;
         cmd_vel_msg.angular.z = 0.0;
     } else {
-        cmd_vel_msg.linear.x = v;
-        cmd_vel_msg.angular.z = w;
+        //cmd_vel_msg.linear.x = v;
+        //cmd_vel_msg.angular.z = w;
+        cmd_vel_msg.linear.x = 0.0;
+        cmd_vel_msg.angular.z = 0.0;
     }
 
     cmd_vel_pub->publish(cmd_vel_msg);
