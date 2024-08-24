@@ -12,6 +12,7 @@ Panels:
         - /Marker1/Topic1
         - /Marker2
         - /Marker3
+        - /Marker4
       Splitter Ratio: 0.5
     Tree Height: 719
   - Class: rviz_common/Selection
@@ -222,6 +223,19 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /target_point_marker
       Value: true
+    - Class: rviz_default_plugins/Marker
+      Enabled: true
+      Name: Marker
+      Namespaces:
+        target_circle: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /look_ahead_range_marker
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -268,7 +282,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 7.913796424865723
+      Distance: 12.096460342407227
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -283,10 +297,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.814797043800354
+      Pitch: 1.0897969007492065
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.0835776329040527
+      Yaw: 4.693589687347412
     Saved: ~
 Window Geometry:
   Displays:
