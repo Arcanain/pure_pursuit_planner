@@ -42,12 +42,17 @@ private:
     void local_obstacle_callback(const visualization_msgs::msg::MarkerArray::SharedPtr msg);
     void obstacle_detected_callback(const std_msgs::msg::Bool::SharedPtr msg);
     void publishCmd(double v, double w);
+    void visualizeTargetPoint(double target_lookahed_x, double target_lookahed_y);
+    void visualizeTargetCircle(double target_lookahed_x, double target_lookahed_y);
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub;
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr look_ahead_range_pub;
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr obstacle_range_pub;
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr target_point_pub;
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr lidar_range_pub;
+
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub;
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr path_sub;
     rclcpp::Subscription<visualization_msgs::msg::MarkerArray>::SharedPtr local_obstacle_sub;
-    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr look_ahead_range_pub;
-    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr obstacle_range_pub;
     rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr obstacle_detected_sub;
     rclcpp::TimerBase::SharedPtr timer;
     rclcpp::Time current_time;
