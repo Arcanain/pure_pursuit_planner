@@ -32,10 +32,13 @@ public:
     bool odom_subscribe_flag = false;
     bool obstacle_detected = false;
 
+    bool avoidance_flag = false;
+
 private:
     void updateControl();
     std::pair<double, double> purePursuitControl(int& pind);
     std::pair<int, double> searchTargetIndex();
+    std::pair<double, std::pair<double, double>> calcClosestPointOnPath();
     double calcDistance(double point_x, double point_y) const;
     void odometry_callback(const nav_msgs::msg::Odometry::SharedPtr msg);
     void path_callback(const nav_msgs::msg::Path::SharedPtr msg);
@@ -56,11 +59,23 @@ private:
     rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr obstacle_detected_sub;
     rclcpp::TimerBase::SharedPtr timer;
     rclcpp::Time current_time;
-    double x, y, yaw, v, w;
+
+    double x, y, yaw, v, w, obstacle_x, obstacle_y;
     int target_ind;
     int oldNearestPointIndex;
     double target_vel;
     double current_vel;
+
+    double temp_target_x = 0.0;
+    double temp_target_y = 0.0;
+
+    double pre_min_distance = 0.0;
+    double diff_min_dist;
+    double init_x, init_y;
+
+
+    //obstacle parameter
+    double obstacle_th = 0.5;
 
     // check goal dist
     double goal_threshold = 0.1; //[m]

@@ -92,94 +92,19 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
         ind = pind;
     }
 
-    double target_lookahed_x, target_lookahed_y, target_curvature;
-    if (ind < static_cast<int>(cx.size())) {
-        target_lookahed_x =cx[ind];
-        target_lookahed_y = cy[ind];
-        target_curvature = ck[ind];
-    } else {
-        target_lookahed_x = cx.back();
-        target_lookahed_y = cy.back();
-        target_curvature = ck.back();
-        ind = static_cast<int>(cx.size()) - 1;
-    }
-    
-    if (obstacle_detected || avoidance_flag){
-        //ロボットと障害物との距離
-        double lenRobotObstacle = calcDistance(obstacle_x, obstacle_y);
-        if (lenRobotObstacle < Lf + obstacle_th){
-            avoidance_flag = true;
-            //回避行動処理
-            if (temp_target_x != 0 && temp_target_y != 0){
-                auto [min_distance, closest_point] = calcClosestPointOnPath();
-                double closest_x = closest_point.first;
-                double closest_y = closest_point.second;
-                diff_min_dist = std::hypot(closest_x - init_x, closest_y - init_y);
-                if (min_distance < 0.3 && diff_min_dist > 0.5){
-                    temp_target_x = 0;
-                    temp_target_y = 0;
-                    pre_min_distance = 0;
-                    avoidance_flag = false;
-                    RCLCPP_INFO(this->get_logger(), "回避終了");
-                }else{
-                    target_lookahed_x = temp_target_x;
-                    target_lookahed_y = temp_target_y;
-                }
-
-                pre_min_distance = min_distance;
-
-            }else{
-                init_x = target_lookahed_x;
-                init_y = target_lookahed_y;
-            }
-
-            if (avoidance_flag){
-                double x0, y0, xr, yr, th;
-                x0 = obstacle_x;
-                y0 = obstacle_y;
-                xr = x;
-                yr = y;
-                th = obstacle_th;
-
-                double A = 1 + std::pow((yr - y0) / (x0 - xr), 2);
-                double B = -2 * yr - (2 * xr * (yr - y0) / (x0 - xr))
-                    + ((yr - y0) / (x0 - xr)) * ((std::pow(Lf, 2) + std::pow(x0, 2) + std::pow(y0, 2) - std::pow(th, 2) - std::pow(xr, 2) - std::pow(yr, 2)) / (x0 - xr));
-                double C = std::pow(xr, 2) + std::pow(yr, 2) - std::pow(Lf, 2)
-                    + std::pow((std::pow(Lf, 2) + std::pow(x0, 2) + std::pow(y0, 2) - std::pow(th, 2) - std::pow(xr, 2) - std::pow(yr, 2)) / (2 * x0 - 2 * xr), 2)
-                    - xr * (std::pow(Lf, 2) + std::pow(x0, 2) + std::pow(y0, 2) - std::pow(th, 2) - std::pow(xr, 2) - std::pow(yr, 2)) / (x0 - xr);
-                
-                double ylp, xlp, Lp, xlm, ylm, Lm;
-                //2つの交点を算出
-                ylp = (-B + std::sqrt(std::pow(B, 2) - 4 * A * C)) / (2 * A);
-                xlp = ((yr - y0) / (x0 - xr)) * ylp + ((std::pow(Lf, 2) + std::pow(x0, 2) + std::pow(y0, 2) 
-                    - std::pow(th, 2) - std::pow(xr, 2) - std::pow(yr, 2)) / (2 * x0 - 2 * xr));
-                // 交点と前方注視点との距離
-                Lp = std::sqrt(std::pow(target_lookahed_x - xlp, 2) + std::pow(target_lookahed_y - ylp, 2));
-
-                ylm = (-B - std::sqrt(std::pow(B, 2) - 4 * A * C)) / (2 * A);
-                xlm = ((yr - y0) / (x0 - xr)) * ylm + ((std::pow(Lf, 2) + std::pow(x0, 2) + std::pow(y0, 2) 
-                    - std::pow(th, 2) - std::pow(xr, 2) - std::pow(yr, 2)) / (2 * x0 - 2 * xr));
-                // 交点と前方注視点との距離
-                Lm = std::sqrt(std::pow(target_lookahed_x - xlm, 2) + std::pow(target_lookahed_y - ylm, 2));
-                if (Lm < Lp){
-                    target_lookahed_x = xlm;
-                    target_lookahed_y = ylm;
-                }else{
-                    target_lookahed_x = xlp;
-                    target_lookahed_y = ylp;
-                }
-                target_curvature = -2.5;
-                temp_target_x = target_lookahed_x;
-                temp_target_y = target_lookahed_y;
-
-            }
-
+    if (!obstacle_detected){
+        double target_lookahed_x, target_lookahed_y, target_curvature;
+        if (ind < static_cast<int>(cx.size())) {
+            target_lookahed_x =cx[ind];
+            target_lookahed_y = cy[ind];
+            target_curvature = ck[ind];
+        } else {
+            target_lookahed_x = cx.back();
+            target_lookahed_y = cy.back();
+            target_curvature = ck.back();
+            ind = static_cast<int>(cx.size()) - 1;
         }
     }
-    //注視点の可視化
-    visualizeTargetPoint(target_lookahed_x, target_lookahed_y);
-    visualizeTargetCircle(target_lookahed_x, target_lookahed_y);
-
     // target speed
     double curvature = std::max(minCurvature, std::min(abs(target_curvature), maxCurvature));
     curvature = curvature / maxCurvature;
@@ -188,28 +113,16 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
     double alpha = std::atan2(target_lookahed_y - y, target_lookahed_x - x) - yaw;
     double v = target_vel;
     double w = v * std::tan(alpha) / Lf;
+    
+
+    //注視点の可視化
+    visualizeTargetPoint(target_lookahed_x, target_lookahed_y);
+    visualizeTargetCircle(target_lookahed_x, target_lookahed_y);
+    
 
     pind = ind;
     return { v, w };
 }
-
-
-
-std::pair<double, std::pair<double, double>> PurePursuitNode::calcClosestPointOnPath() {
-    double min_distance = std::numeric_limits<double>::max();
-    std::pair<double, double> closest_point;
-
-    for (size_t i = 0; i < cx.size(); ++i) {
-        double distance = calcDistance(cx[i], cy[i]);
-        if (distance < min_distance) {
-            min_distance = distance;
-            closest_point = {cx[i], cy[i]};
-        }
-    }
-
-    return {min_distance, closest_point};
-}
-
 
 std::pair<int, double> PurePursuitNode::searchTargetIndex() {
     if (oldNearestPointIndex == -1) {
@@ -272,8 +185,8 @@ void PurePursuitNode::visualizeTargetPoint(double target_lookahed_x, double targ
     target_point_marker.scale.y = scale;
     target_point_marker.scale.z = scale;
 
-    // マーカーの色を設定 (紫色)
-    target_point_marker.color.r = 1.0;
+    // マーカーの色を設定 (青色)
+    target_point_marker.color.r = 0.0;
     target_point_marker.color.g = 0.0;
     target_point_marker.color.b = 1.0;
     target_point_marker.color.a = 1.0;  // 不透明
@@ -351,12 +264,12 @@ void PurePursuitNode::obstacle_detected_callback(const std_msgs::msg::Bool::Shar
 
 void PurePursuitNode::local_obstacle_callback(const visualization_msgs::msg::MarkerArray::SharedPtr msg) {
     //RCLCPP_INFO(this->get_logger(), "obstacle_detected_flag: %s", obstacle_detected ? "true" : "false");
-    if (obstacle_detected || avoidance_flag){
+    if (obstacle_detected){
         for (const auto& marker : msg->markers) {
             
             // 障害物の中心座標を取得
-            obstacle_x = marker.pose.position.x;
-            obstacle_y = marker.pose.position.y;
+            double obstacle_x = marker.pose.position.x;
+            double obstacle_y = marker.pose.position.y;
 
             // 円を描くマーカーを作成
             visualization_msgs::msg::Marker circle_marker;
@@ -374,7 +287,7 @@ void PurePursuitNode::local_obstacle_callback(const visualization_msgs::msg::Mar
             circle_marker.color.a = 1.0;  // 不透明
 
             // 円周上の点を追加
-            double radius = obstacle_th; // 円の半径
+            double radius = 0.5;  // 円の半径
             int num_points = 100; // 円周上の点の数
             for (int i = 0; i <= num_points; ++i) {
                 double angle = i * 2.0 * M_PI / num_points;
