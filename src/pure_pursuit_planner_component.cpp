@@ -15,10 +15,16 @@ PurePursuitNode::PurePursuitNode()
     look_ahead_range_pub = this->create_publisher<visualization_msgs::msg::Marker>(
       "look_ahead_range_marker",
       10);
+    lidar_range_pub = this->create_publisher<visualization_msgs::msg::Marker>(
+      "lidar_range_marker",
+      10);
 
     obstacle_range_pub = this->create_publisher<visualization_msgs::msg::Marker>(
       "obstacle_range_marker",
       10);
+
+    target_point_pub = this->create_publisher<visualization_msgs::msg::Marker>("target_point_marker", 10);
+
     
     // Subscriber
     odom_sub = this->create_subscription<nav_msgs::msg::Odometry>(
@@ -66,22 +72,22 @@ void PurePursuitNode::updateControl() {
         double radius = 1.0;
         int num_points = 100;
         for (int i = 0; i <= num_points; ++i) {
-        double angle = i * 2.0 * M_PI / num_points;
-        geometry_msgs::msg::Point p;
-        p.x = radius * cos(angle);
-        p.y = radius * sin(angle);
-        p.z = 0.0;
-        line_strip_marker.points.push_back(p);
+            double angle = i * 2.0 * M_PI / num_points;
+            geometry_msgs::msg::Point p;
+            p.x = radius * cos(angle);
+            p.y = radius * sin(angle);
+            p.z = 0.0;
+            line_strip_marker.points.push_back(p);
         }
 
         // マーカーをパブリッシュ
-        look_ahead_range_pub->publish(line_strip_marker);
+        lidar_range_pub->publish(line_strip_marker);
     }
 }
 
 std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
     auto [ind, Lf] = searchTargetIndex();
-
+    //ind:path配列の要素数
     if (pind >= ind) {
         ind = pind;
     }
@@ -97,6 +103,10 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
         target_curvature = ck.back();
         ind = static_cast<int>(cx.size()) - 1;
     }
+
+    //注視点の可視化
+    visualizeTargetPoint(target_lookahed_x, target_lookahed_y);
+    visualizeTargetCircle(target_lookahed_x, target_lookahed_y);
 
     // target speed
     double curvature = std::max(minCurvature, std::min(abs(target_curvature), maxCurvature));
@@ -148,6 +158,79 @@ std::pair<int, double> PurePursuitNode::searchTargetIndex() {
 
     return { ind, Lf };
 }
+
+//前方注視点のドットを可視化
+void PurePursuitNode::visualizeTargetPoint(double target_lookahed_x, double target_lookahed_y) {
+    visualization_msgs::msg::Marker target_point_marker;
+    
+    // マーカーのヘッダーを設定
+    target_point_marker.header.frame_id = "map";  // 適切なフレームに変更する
+    target_point_marker.header.stamp = this->get_clock()->now();
+    target_point_marker.ns = "target_point";
+    target_point_marker.id = 0;  // 識別用ID
+    target_point_marker.type = visualization_msgs::msg::Marker::SPHERE;  // 点として表示するためにSPHEREを使用
+    target_point_marker.action = visualization_msgs::msg::Marker::ADD;
+
+    // マーカーの位置を設定
+    target_point_marker.pose.position.x = target_lookahed_x;
+    target_point_marker.pose.position.y = target_lookahed_y;
+    target_point_marker.pose.position.z = 0.0;  // 2D平面上に表示するためZ座標は0
+
+    // マーカーのサイズを設定
+    double scale = 0.1;
+    target_point_marker.scale.x = scale;  // 直径0.2mの点
+    target_point_marker.scale.y = scale;
+    target_point_marker.scale.z = scale;
+
+    // マーカーの色を設定 (青色)
+    target_point_marker.color.r = 0.0;
+    target_point_marker.color.g = 0.0;
+    target_point_marker.color.b = 1.0;
+    target_point_marker.color.a = 1.0;  // 不透明
+
+    // マーカーをパブリッシュ
+    target_point_pub->publish(target_point_marker);
+}
+
+void PurePursuitNode::visualizeTargetCircle(double target_lookahed_x, double target_lookahed_y) {
+    visualization_msgs::msg::Marker circle_marker;
+    
+    // マーカーのヘッダーを設定
+    circle_marker.header.frame_id = "base_link";  // ロボットを中心とするためのフレーム
+    circle_marker.header.stamp = this->get_clock()->now();
+    circle_marker.ns = "target_circle";
+    circle_marker.id = 0;  // 識別用ID
+    circle_marker.type = visualization_msgs::msg::Marker::LINE_STRIP;  // 円を描くためにLINE_STRIPを使用
+    circle_marker.action = visualization_msgs::msg::Marker::ADD;
+
+    // 円の半径を計算 (ロボットとターゲットの距離)
+    double radius = calcDistance(target_lookahed_x, target_lookahed_y);
+    
+    // 円周上の点を追加
+    int num_points = 100; // 円を描くための点の数
+    for (int i = 0; i <= num_points; ++i) {
+        double angle = i * 2.0 * M_PI / num_points;
+        geometry_msgs::msg::Point p;
+        p.x = radius * cos(angle);
+        p.y = radius * sin(angle);
+        p.z = 0.0;
+        circle_marker.points.push_back(p);
+    }
+
+    // マーカーのサイズを設定（線の太さ）
+    circle_marker.scale.x = 0.05;  // 線の太さ
+
+    // マーカーの色を設定 (青色)
+    circle_marker.color.r = 0.0;
+    circle_marker.color.g = 0.0;
+    circle_marker.color.b = 1.0;
+    circle_marker.color.a = 1.0;  // 不透明
+
+    // マーカーをパブリッシュ
+    look_ahead_range_pub->publish(circle_marker);
+}
+
+
 
 double PurePursuitNode::calcDistance(double point_x, double point_y) const {
     double dx = x - point_x;
