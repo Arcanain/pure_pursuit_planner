@@ -160,7 +160,7 @@ void PurePursuitNode::odometry_callback(const nav_msgs::msg::Odometry::SharedPtr
     // オドメトリからx, y, thetaを取得
     x = msg->pose.pose.position.x;
     y = msg->pose.pose.position.y;
-    /*
+    
     tf2::Quaternion quat;
     tf2::fromMsg(msg->pose.pose.orientation, quat);
     tf2::Matrix3x3 mat(quat);
@@ -168,7 +168,7 @@ void PurePursuitNode::odometry_callback(const nav_msgs::msg::Odometry::SharedPtr
     mat.getRPY(roll_tmp, pitch_tmp, yaw_tmp);
     
     yaw = yaw_tmp;
-    */
+    
     odom_subscribe_flag = true;
 }
 
@@ -184,7 +184,7 @@ void PurePursuitNode::imu_callback(const sensor_msgs::msg::Imu::SharedPtr msg)
     mat.getRPY(roll_tmp, pitch_tmp, yaw_tmp);
 
     // ヨー角をセット
-    yaw = yaw_tmp;
+    //yaw = yaw_tmp;
 }
 
 void PurePursuitNode::local_obstacle_callback(const visualization_msgs::msg::MarkerArray::SharedPtr msg) {
@@ -274,10 +274,10 @@ void PurePursuitNode::publishCmd(double v, double w)
         cmd_vel_msg.linear.x = 0.0;
         cmd_vel_msg.angular.z = 0.0;
     } else {
-        //cmd_vel_msg.linear.x = v;
-        //cmd_vel_msg.angular.z = w;
-        cmd_vel_msg.linear.x = 0.0;
-        cmd_vel_msg.angular.z = 0.0;
+        cmd_vel_msg.linear.x = v;
+        cmd_vel_msg.angular.z = w;
+        //cmd_vel_msg.linear.x = 0.0;
+        //cmd_vel_msg.angular.z = 0.0;
     }
 
     cmd_vel_pub->publish(cmd_vel_msg);

@@ -44,12 +44,12 @@ def generate_launch_description():
         output='both',
         parameters=[{'joint_state_publisher': robot_description}]
     )
-
-    #odometry_pub_node = Node(
-        #package=simulator_package,
-        #executable='odometry_pub',
-        #output="screen",
-    #)
+    
+    odometry_pub_node = Node(
+        package=simulator_package,
+        executable='odometry_pub',
+        output="screen",
+    )
 
     imu_odom_pub_node = Node(
         package=simulator_package,
@@ -84,8 +84,8 @@ def generate_launch_description():
         rviz_node,
         robot_description_rviz_node,
         joint_state_publisher_rviz_node,
-        #odometry_pub_node,
-        imu_odom_pub_node,
+        odometry_pub_node,
+        #imu_odom_pub_node,
         obstacle_pub_node,
         path_publisher_node,
         pure_pursuit_planner_node,
