@@ -31,7 +31,6 @@ public:
     bool path_subscribe_flag = false;
     bool odom_subscribe_flag = false;
     bool obstacle_detected = false;
-
     bool avoidance_flag = false;
 
 private:
@@ -42,11 +41,13 @@ private:
     double calcDistance(double point_x, double point_y) const;
     void odometry_callback(const nav_msgs::msg::Odometry::SharedPtr msg);
     void path_callback(const nav_msgs::msg::Path::SharedPtr msg);
+    void gnss_path_callback(const nav_msgs::msg::Path::SharedPtr msg);  // 新しく追加
     void local_obstacle_callback(const visualization_msgs::msg::MarkerArray::SharedPtr msg);
     void obstacle_detected_callback(const std_msgs::msg::Bool::SharedPtr msg);
     void publishCmd(double v, double w);
     void visualizeTargetPoint(double target_lookahed_x, double target_lookahed_y);
     void visualizeTargetCircle(double target_lookahed_x, double target_lookahed_y);
+
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr look_ahead_range_pub;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr obstacle_range_pub;
@@ -55,6 +56,7 @@ private:
 
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub;
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr path_sub;
+    rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr gnss_path_sub;  // 新しく追加
     rclcpp::Subscription<visualization_msgs::msg::MarkerArray>::SharedPtr local_obstacle_sub;
     rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr obstacle_detected_sub;
     rclcpp::TimerBase::SharedPtr timer;
@@ -73,7 +75,6 @@ private:
     double diff_min_dist;
     double init_x, init_y;
 
-
     //obstacle parameter
     double obstacle_th = 0.5;
 
@@ -82,12 +83,11 @@ private:
 
     // pure pursuit parameter
     const double k = 0.1; // look forward gain
-    //const double Lfc = 2.0; // [m] look-ahead distance
     const double Lfc = 0.25; // [m] look-ahead distance
     const double Kp = 1.0; // speed proportional gain
     const double dt = 0.1; // [s] time tick
 
-    // cauvature parameter
+    // curvature parameter
     double minCurvature = 0.0;
     double maxCurvature = 3.0;
     double minVelocity = 0.1;
@@ -95,3 +95,4 @@ private:
 };
 
 #endif // PURE_PURSUIT_PLANNER_COMPONENT_HPP
+

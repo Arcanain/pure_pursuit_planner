@@ -41,6 +41,11 @@ PurePursuitNode::PurePursuitNode()
             "obstacle_detected", 10,
             std::bind(&PurePursuitNode::obstacle_detected_callback, this, _1));
 
+    // /gnss_pathトピックからx, y座標を取得するためのサブスクライバを追加
+    gnss_path_sub = this->create_subscription<nav_msgs::msg::Path>(
+            "/gnss_path", 10,
+            std::bind(&PurePursuitNode::gnss_path_callback, this, _1));
+
     current_time = this->get_clock()->now();
     // Timer callback
     timer = this->create_wall_timer(std::chrono::milliseconds(static_cast<int>(dt * 1000)),
@@ -193,8 +198,6 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
     return { v, w };
 }
 
-
-
 std::pair<double, std::pair<double, double>> PurePursuitNode::calcClosestPointOnPath() {
     double min_distance = std::numeric_limits<double>::max();
     std::pair<double, double> closest_point;
@@ -320,8 +323,6 @@ void PurePursuitNode::visualizeTargetCircle(double target_lookahed_x, double tar
     look_ahead_range_pub->publish(circle_marker);
 }
 
-
-
 double PurePursuitNode::calcDistance(double point_x, double point_y) const {
     double dx = x - point_x;
     double dy = y - point_y;
@@ -331,8 +332,8 @@ double PurePursuitNode::calcDistance(double point_x, double point_y) const {
 void PurePursuitNode::odometry_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
     // オドメトリからx, y, thetaを取得
-    x = msg->pose.pose.position.x;
-    y = msg->pose.pose.position.y;
+    // x = msg->pose.pose.position.x;
+    // y = msg->pose.pose.position.y;
 
     tf2::Quaternion quat;
     tf2::fromMsg(msg->pose.pose.orientation, quat);
@@ -350,7 +351,6 @@ void PurePursuitNode::obstacle_detected_callback(const std_msgs::msg::Bool::Shar
 }
 
 void PurePursuitNode::local_obstacle_callback(const visualization_msgs::msg::MarkerArray::SharedPtr msg) {
-    //RCLCPP_INFO(this->get_logger(), "obstacle_detected_flag: %s", obstacle_detected ? "true" : "false");
     if (obstacle_detected || avoidance_flag){
         for (const auto& marker : msg->markers) {
             
@@ -393,17 +393,24 @@ void PurePursuitNode::local_obstacle_callback(const visualization_msgs::msg::Mar
         }
     }
     else{
-            // Create and publish a DELETEALL marker individually
+        // Create and publish a DELETEALL marker individually
         visualization_msgs::msg::Marker delete_marker;
         delete_marker.header.frame_id = "map";
         delete_marker.header.stamp = this->get_clock()->now();
         delete_marker.action = visualization_msgs::msg::Marker::DELETEALL;
 
         obstacle_range_pub->publish(delete_marker);
-
     }
 }
 
+void PurePursuitNode::gnss_path_callback(const nav_msgs::msg::Path::SharedPtr msg)
+{
+    // GNSSパスからx, yを取得
+    if (!msg->poses.empty()) {
+        x = msg->poses.back().pose.position.x;
+        y = msg->poses.back().pose.position.y;
+    }
+}
 
 void PurePursuitNode::path_callback(const nav_msgs::msg::Path::SharedPtr msg) {
     if (!path_subscribe_flag) {
@@ -440,7 +447,7 @@ void PurePursuitNode::publishCmd(double v, double w)
     geometry_msgs::msg::Twist cmd_vel_msg;
 
     double goal_x = cx[cx.size() - 1];
-    double goal_y = cy[cy.size() - 1];
+    double goal_y = cy[cx.size() - 1];
     double goal_dist = std::abs(std::sqrt(std::pow((goal_x - x), 2.0) + std::pow((goal_y - y), 2.0)));
 
     // goal judgement
