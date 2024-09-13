@@ -11,7 +11,7 @@ PurePursuitNode::PurePursuitNode()
     oldNearestPointIndex = -1;
 
     // Publisher
-    cmd_vel_pub = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
+    cmd_vel_pub = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 50);
     look_ahead_range_pub = this->create_publisher<visualization_msgs::msg::Marker>(
       "look_ahead_range_marker",
       10);
@@ -28,9 +28,9 @@ PurePursuitNode::PurePursuitNode()
     
     // Subscriber
     odom_sub = this->create_subscription<nav_msgs::msg::Odometry>(
-    "odom", 10, std::bind(&PurePursuitNode::odometry_callback, this, _1));
+    "odom", 50, std::bind(&PurePursuitNode::odometry_callback, this, _1));
     path_sub = this->create_subscription<nav_msgs::msg::Path>(
-            "tgt_path", 10,
+            "tgt_path", 50,
             std::bind(&PurePursuitNode::path_callback, this, std::placeholders::_1));
 
     local_obstacle_sub = this->create_subscription<visualization_msgs::msg::MarkerArray>(
