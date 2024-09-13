@@ -52,6 +52,12 @@ def generate_launch_description():
         output="screen",
     )
 
+    obstacle_pub_node = Node(
+        package=simulator_package,
+        executable='obstacle_pub',
+        output="screen",
+    )
+
     odrive_ros2_control_node = Node(
         package=odrive_package,
         executable='control_odrive',
@@ -81,6 +87,7 @@ def generate_launch_description():
         robot_description_rviz_node,
         joint_state_publisher_rviz_node,
         odrive_ros2_control_node,
+        obstacle_pub_node,
         path_publisher_node,
         pure_pursuit_planner_node,
     ]
