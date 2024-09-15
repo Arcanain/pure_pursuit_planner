@@ -111,6 +111,7 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
             avoidance_flag = true;
             //回避行動処理
             if (temp_target_x != 0 && temp_target_y != 0){
+                target_curvature = 1.5;
                 auto [min_distance, closest_point] = calcClosestPointOnPath();
                 double closest_x = closest_point.first;
                 double closest_y = closest_point.second;

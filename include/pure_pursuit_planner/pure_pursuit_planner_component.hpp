@@ -98,7 +98,7 @@ private:
     double minVelocity = 0.3;
     double maxVelocity = 0.5;
 
-    double max_angular_velocity = 1.0;
+    double max_angular_velocity = 0.5;
 };
 
 #endif // PURE_PURSUIT_PLANNER_COMPONENT_HPP
