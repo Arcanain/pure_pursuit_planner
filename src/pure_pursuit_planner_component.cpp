@@ -168,7 +168,7 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
                     target_lookahed_x = xlp;
                     target_lookahed_y = ylp;
                 }
-                target_curvature = -2.5;
+                //target_curvature = -2.5;
                 temp_target_x = target_lookahed_x;
                 temp_target_y = target_lookahed_y;
 
@@ -185,9 +185,31 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
     curvature = curvature / maxCurvature;
     double target_vel = (maxVelocity - minVelocity) * pow(sin(acos(std::cbrt(curvature))), 3) + minVelocity; //[m/s]
 
+    // 速度と時間の差分を計算
+    auto [acceleration_result, delta_time_result] = calcAcceleration(target_vel, current_time);
+    double acceleration = acceleration_result;
+    double delta_time = delta_time_result;
+    RCLCPP_INFO(this->get_logger(), "acceleration: %lf", acceleration);
+    // 加速度制限の適用
+    if(acceleration > max_acceleration){
+        RCLCPP_INFO(this->get_logger(), "acceleration over: %lf", acceleration);
+        double max_velocity_change = max_acceleration * delta_time;
+        target_vel = previous_vel + max_velocity_change;
+        auto [temp_acceleration_result, temp_delta_time] = calcAcceleration(target_vel, current_time);
+        double limited_acceleration = temp_acceleration_result;
+        RCLCPP_INFO(this->get_logger(), "limited_acceleration: %lf", limited_acceleration);
+    }
+
+    RCLCPP_INFO(this->get_logger(), "target_vel: %lf", target_vel*3.6);
     double alpha = std::atan2(target_lookahed_y - y, target_lookahed_x - x) - yaw;
     double v = target_vel;
     double w = v * std::tan(alpha) / Lf;
+    if (w > max_angular_velocity) {
+        w = max_angular_velocity;
+    } else if (w < -max_angular_velocity) {
+        w = -max_angular_velocity;
+    }
+    RCLCPP_INFO(this->get_logger(), "w: %lf", w);
 
     pind = ind;
     return { v, w };
@@ -209,6 +231,26 @@ std::pair<double, std::pair<double, double>> PurePursuitNode::calcClosestPointOn
 
     return {min_distance, closest_point};
 }
+
+std::pair<double, double> PurePursuitNode::calcAcceleration(double current_vel, rclcpp::Time now_time) {
+    // 速度の差分を計算
+    double vel_diff = current_vel - previous_vel;
+
+    // 時間の差分を計算 (秒単位)
+    double time_diff = (now_time - previous_time).seconds();
+
+    // 加速度 = 速度の変化量 / 時間の変化量
+    double acceleration = vel_diff / time_diff;
+    //RCLCPP_INFO(this->get_logger(), "acceleration: %lf", acceleration);
+    if (acceleration < max_acceleration){
+        // 前回の速度と時間を更新
+        previous_vel = current_vel;
+        previous_time = now_time;
+    }
+
+    return {acceleration, time_diff};
+}
+
 
 
 std::pair<int, double> PurePursuitNode::searchTargetIndex() {
