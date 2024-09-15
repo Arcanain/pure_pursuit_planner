@@ -65,7 +65,7 @@ def generate_launch_description():
     
     path_smoother_node = Node(
         package='path_smoother',
-        executable='cubic_spline_node',
+        executable='save_path',
         output="screen",
     )
 
