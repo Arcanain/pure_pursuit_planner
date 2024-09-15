@@ -40,6 +40,7 @@ private:
     std::pair<int, double> searchTargetIndex();
     std::pair<double, std::pair<double, double>> calcClosestPointOnPath();
     double calcDistance(double point_x, double point_y) const;
+    std::pair<double, double> calcAcceleration(double current_vel, rclcpp::Time now_time) ;
     void odometry_callback(const nav_msgs::msg::Odometry::SharedPtr msg);
     void path_callback(const nav_msgs::msg::Path::SharedPtr msg);
     void local_obstacle_callback(const visualization_msgs::msg::MarkerArray::SharedPtr msg);
@@ -73,6 +74,10 @@ private:
     double diff_min_dist;
     double init_x, init_y;
 
+    double previous_vel = 0.0;
+    double max_acceleration = 0.08;
+    rclcpp::Time previous_time = this->get_clock()->now();
+
 
     //obstacle parameter
     double obstacle_th = 0.5;
@@ -90,8 +95,10 @@ private:
     // cauvature parameter
     double minCurvature = 0.0;
     double maxCurvature = 3.0;
-    double minVelocity = 0.1;
-    double maxVelocity = 0.3;
+    double minVelocity = 0.3;
+    double maxVelocity = 0.5;
+
+    double max_angular_velocity = 1.0;
 };
 
 #endif // PURE_PURSUIT_PLANNER_COMPONENT_HPP

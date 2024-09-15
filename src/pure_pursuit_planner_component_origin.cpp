@@ -29,6 +29,7 @@ PurePursuitNode::PurePursuitNode()
     // Subscriber
     odom_sub = this->create_subscription<nav_msgs::msg::Odometry>(
     "odom", 50, std::bind(&PurePursuitNode::odometry_callback, this, _1));
+
     path_sub = this->create_subscription<nav_msgs::msg::Path>(
             "tgt_path", 50,
             std::bind(&PurePursuitNode::path_callback, this, std::placeholders::_1));
@@ -109,7 +110,7 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
     double curvature = std::max(minCurvature, std::min(abs(target_curvature), maxCurvature));
     curvature = curvature / maxCurvature;
     double target_vel = (maxVelocity - minVelocity) * pow(sin(acos(std::cbrt(curvature))), 3) + minVelocity; //[m/s]
-
+    //RCLCPP_INFO(this->get_logger(), "target_vel: %s", target_vel);
     double alpha = std::atan2(target_lookahed_y - y, target_lookahed_x - x) - yaw;
     double v = target_vel;
     double w = v * std::tan(alpha) / Lf;
