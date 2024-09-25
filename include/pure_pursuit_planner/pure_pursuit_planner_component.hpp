@@ -83,12 +83,12 @@ private:
     double obstacle_th = 0.5;
 
     // check goal dist
-    double goal_threshold = 0.2; //[m]
+    double goal_threshold = 0.4; //[m]
 
     // pure pursuit parameter
     const double k = 0.1; // look forward gain
     //const double Lfc = 2.0; // [m] look-ahead distance
-    const double Lfc = 0.4; // [m] look-ahead distance
+    const double Lfc = 0.6; // [m] look-ahead distance
     const double Kp = 1.0; // speed proportional gain
     const double dt = 0.1; // [s] time tick
 
@@ -98,7 +98,7 @@ private:
     double minVelocity = 0.2;
     double maxVelocity = 0.5;
 
-    double max_angular_velocity = 0.5;
+    double max_angular_velocity = 0.9;
 };
 
 #endif // PURE_PURSUIT_PLANNER_COMPONENT_HPP

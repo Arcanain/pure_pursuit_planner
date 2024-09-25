@@ -33,10 +33,13 @@ PurePursuitNode::PurePursuitNode()
             "tgt_path", 10,
             std::bind(&PurePursuitNode::path_callback, this, std::placeholders::_1));
 
-    local_obstacle_sub = this->create_subscription<visualization_msgs::msg::MarkerArray>(
+    /*local_obstacle_sub = this->create_subscription<visualization_msgs::msg::MarkerArray>(
             "local_obstacle_markers", 10,
+            std::bind(&PurePursuitNode::local_obstacle_callback, this, _1));*/
+    local_obstacle_sub = this->create_subscription<visualization_msgs::msg::MarkerArray>(
+            "closest_point_marker", 10,
             std::bind(&PurePursuitNode::local_obstacle_callback, this, _1));
-    
+            
     obstacle_detected_sub = this->create_subscription<std_msgs::msg::Bool>(
             "obstacle_detected", 10,
             std::bind(&PurePursuitNode::obstacle_detected_callback, this, _1));
@@ -106,8 +109,15 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
     
     if (obstacle_detected || avoidance_flag){
         //ロボットと障害物との距離
+        obstacle_x += x;
+        obstacle_y += y;
         double lenRobotObstacle = calcDistance(obstacle_x, obstacle_y);
+        //double lenRobotObstacle = calcDistance(obstacle_x, obstacle_y);
+        RCLCPP_INFO(this->get_logger(), "回避開始");
+        RCLCPP_INFO(this->get_logger(), "%lf,%lf",obstacle_x, obstacle_y);
+        RCLCPP_INFO(this->get_logger(), "%lf",lenRobotObstacle);
         if (lenRobotObstacle < Lf + obstacle_th){
+            RCLCPP_INFO(this->get_logger(), "回避開始2");
             avoidance_flag = true;
             //回避行動処理
             if (temp_target_x != 0 && temp_target_y != 0){
@@ -135,6 +145,7 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
             }
 
             if (avoidance_flag){
+                RCLCPP_INFO(this->get_logger(), "回避開始3");
                 double x0, y0, xr, yr, th;
                 x0 = obstacle_x;
                 y0 = obstacle_y;
@@ -205,6 +216,9 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
     double alpha = std::atan2(target_lookahed_y - y, target_lookahed_x - x) - yaw;
     double v = target_vel;
     double w = v * std::tan(alpha) / Lf;
+    if (std::isnan(w)) {
+        w = 0.5;
+    }
     if (w > max_angular_velocity) {
         w = max_angular_velocity;
     } else if (w < -max_angular_velocity) {
