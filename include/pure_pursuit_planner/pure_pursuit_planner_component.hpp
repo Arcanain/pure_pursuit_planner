@@ -12,6 +12,11 @@
 #include "visualization_msgs/msg/marker.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
 #include "std_msgs/msg/bool.hpp"
+#include <tf2_ros/transform_listener.h>  // 追加
+// 修正後
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <tf2_ros/buffer.h>
+
 
 #include <vector>
 #include <cmath>
@@ -60,6 +65,9 @@ private:
     rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr obstacle_detected_sub;
     rclcpp::TimerBase::SharedPtr timer;
     rclcpp::Time current_time;
+    std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
+    std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
+
 
     double x, y, yaw, v, w, obstacle_x, obstacle_y;
     int target_ind;

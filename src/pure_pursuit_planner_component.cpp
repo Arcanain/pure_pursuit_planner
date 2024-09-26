@@ -34,7 +34,7 @@ PurePursuitNode::PurePursuitNode()
             std::bind(&PurePursuitNode::path_callback, this, std::placeholders::_1));
 
     local_obstacle_sub = this->create_subscription<visualization_msgs::msg::MarkerArray>(
-            "local_obstacle_markers", 10,
+            "closest_point_marker", 10,
             std::bind(&PurePursuitNode::local_obstacle_callback, this, _1));
     
     obstacle_detected_sub = this->create_subscription<std_msgs::msg::Bool>(
@@ -106,8 +106,12 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
     
     if (obstacle_detected || avoidance_flag){
         //ロボットと障害物との距離
-        double lenRobotObstacle = calcDistance(obstacle_x, obstacle_y);
+        RCLCPP_INFO(this->get_logger(), "x, y: %lf, %lf", x, y);
+        RCLCPP_INFO(this->get_logger(), "obstacle_x, obstacle_y: %lf, %lf", obstacle_x, obstacle_y);
+        double lenRobotObstacle = std::hypot(obstacle_x, obstacle_y);
+        RCLCPP_INFO(this->get_logger(), "回避行動1");
         if (lenRobotObstacle < Lf + obstacle_th){
+            RCLCPP_INFO(this->get_logger(), "回避行動2");
             avoidance_flag = true;
             //回避行動処理
             if (temp_target_x != 0 && temp_target_y != 0){
@@ -135,11 +139,14 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
             }
 
             if (avoidance_flag){
+                RCLCPP_INFO(this->get_logger(), "回避行動3");
                 double x0, y0, xr, yr, th;
-                x0 = obstacle_x;
-                y0 = obstacle_y;
-                xr = x;
-                yr = y;
+                double tempX = x;
+                double tempY = y;
+                x0 = obstacle_x + tempX;
+                y0 = obstacle_y + tempY;
+                xr = tempX;
+                yr = tempY;
                 th = obstacle_th;
 
                 double A = 1 + std::pow((yr - y0) / (x0 - xr), 2);
@@ -190,18 +197,18 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
     auto [acceleration_result, delta_time_result] = calcAcceleration(target_vel, current_time);
     double acceleration = acceleration_result;
     double delta_time = delta_time_result;
-    RCLCPP_INFO(this->get_logger(), "acceleration: %lf", acceleration);
+    //RCLCPP_INFO(this->get_logger(), "acceleration: %lf", acceleration);
     // 加速度制限の適用
     if(acceleration > max_acceleration){
-        RCLCPP_INFO(this->get_logger(), "acceleration over: %lf", acceleration);
+        //RCLCPP_INFO(this->get_logger(), "acceleration over: %lf", acceleration);
         double max_velocity_change = max_acceleration * delta_time;
         target_vel = previous_vel + max_velocity_change;
         auto [temp_acceleration_result, temp_delta_time] = calcAcceleration(target_vel, current_time);
         double limited_acceleration = temp_acceleration_result;
-        RCLCPP_INFO(this->get_logger(), "limited_acceleration: %lf", limited_acceleration);
+        //RCLCPP_INFO(this->get_logger(), "limited_acceleration: %lf", limited_acceleration);
     }
 
-    RCLCPP_INFO(this->get_logger(), "target_vel: %lf", target_vel*3.6);
+    //RCLCPP_INFO(this->get_logger(), "target_vel: %lf", target_vel*3.6);
     double alpha = std::atan2(target_lookahed_y - y, target_lookahed_x - x) - yaw;
     double v = target_vel;
     double w = v * std::tan(alpha) / Lf;
@@ -210,7 +217,7 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
     } else if (w < -max_angular_velocity) {
         w = -max_angular_velocity;
     }
-    RCLCPP_INFO(this->get_logger(), "w: %lf", w);
+    //RCLCPP_INFO(this->get_logger(), "w: %lf", w);
 
     pind = ind;
     return { v, w };
