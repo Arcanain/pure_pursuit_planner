@@ -4,6 +4,7 @@ from launch import LaunchDescription
 from launch.substitutions import PathJoinSubstitution
 
 from launch_ros.actions import Node
+from launch.actions import ExecuteProcess
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -75,7 +76,21 @@ def generate_launch_description():
         output="screen",
     )
 
+	# play the converted_bag.db3 rosbag file
+    rosBagPlay = ExecuteProcess(
+        cmd=['ros2', 'bag', 'play', '/home/pei/02_in_seikei_gakuen_1021_2024/rosbag2_1729514994_0.db3'],  # Update with correct path
+        output='screen'
+    )
+
+    gnss_node = Node(
+        package='gnss_preprocessing',
+        executable='gnss_preprocessing',
+        output='screen'
+    )
+
     nodes = [
+        rosBagPlay,
+        gnss_node,
         rviz_node,
         robot_description_rviz_node,
         joint_state_publisher_rviz_node,
