@@ -12,7 +12,6 @@ def generate_launch_description():
     simulator_package = 'arcanain_simulator'
     odrive_package = 'odrive_ros2_control'
     rviz_file_name = "pure_pursuit_planner.rviz"
-    #lidar_rviz_file_name = "pure_pursuit_planner_lidar.rviz"
 
     file_path = os.path.expanduser('~/ros2_ws/src/arcanain_simulator/urdf/mobile_robot.urdf.xml')
 
@@ -47,19 +46,6 @@ def generate_launch_description():
         parameters=[{'joint_state_publisher': robot_description}]
     )
 
-    joy_linux_node = Node(
-        package='joy_linux',
-        executable='joy_linux_node',
-        name='joy_linux_node',
-        output='screen'
-    )
-    joy_to_twist_node = Node(
-            package='ros2_joy_to_twist',
-            executable='joy_to_twist',
-            name='joy_to_twist',
-            output='screen'
-    )
-
     bwt901cl_pkg_node = Node(
         package='bwt901cl_pkg',
         executable='imu_bwt901cl',
@@ -68,7 +54,7 @@ def generate_launch_description():
 
     odometry_pub_node = Node(
         package=simulator_package,
-        executable='odrive_odometry_pub',
+        executable='odrive_imu_odom_pub',
         output="screen",
     )
 
@@ -92,7 +78,7 @@ def generate_launch_description():
     
     path_smoother_node = Node(
         package='path_smoother',
-        executable='save_path',
+        executable='cubic_spline_node',
         output="screen",
     )
 
@@ -106,11 +92,11 @@ def generate_launch_description():
         rviz_node,
         robot_description_rviz_node,
         joint_state_publisher_rviz_node,
-        joy_linux_node,
-        joy_to_twist_node,
+        bwt901cl_pkg_node,
         odrive_ros2_control_node,
-        odometry_pub_node,
-        path_smoother_node,
+        odometry_pub_node ,
+        path_publisher_node,
+        pure_pursuit_planner_node,
     ]
 
     return LaunchDescription(nodes)
