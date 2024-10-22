@@ -54,7 +54,7 @@ def generate_launch_description():
 
     odometry_pub_node = Node(
         package=simulator_package,
-        executable='odrive_imu_odom_pub',
+        executable='odrive_odometry_pub',
         output="screen",
     )
 
@@ -92,7 +92,6 @@ def generate_launch_description():
         rviz_node,
         robot_description_rviz_node,
         joint_state_publisher_rviz_node,
-        bwt901cl_pkg_node,
         odrive_ros2_control_node,
         odometry_pub_node ,
         path_publisher_node,
