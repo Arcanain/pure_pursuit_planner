@@ -132,8 +132,8 @@ def generate_launch_description():
         initial_position_node,
         gnss_node,
         odometry_pub_node,
-        #path_smoother_node,
-        save_path_node,
+        path_smoother_node,
+        #save_path_node,
         rviz_node,
     ]
 
