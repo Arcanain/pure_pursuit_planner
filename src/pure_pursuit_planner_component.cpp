@@ -33,12 +33,15 @@ PurePursuitNode::PurePursuitNode()
             "tgt_path", 10,
             std::bind(&PurePursuitNode::path_callback, this, std::placeholders::_1));
 
-    /*local_obstacle_sub = this->create_subscription<visualization_msgs::msg::MarkerArray>(
-            "local_obstacle_markers", 10,
-            std::bind(&PurePursuitNode::local_obstacle_callback, this, _1));*/
+    //simulation
     local_obstacle_sub = this->create_subscription<visualization_msgs::msg::MarkerArray>(
-            "closest_point_marker", 10,
+            "local_obstacle_markers", 10,
             std::bind(&PurePursuitNode::local_obstacle_callback, this, _1));
+
+    //Lidar
+    /*local_obstacle_sub = this->create_subscription<visualization_msgs::msg::MarkerArray>(
+            "closest_point_marker", 10,
+            std::bind(&PurePursuitNode::local_obstacle_callback, this, _1));*/
             
     obstacle_detected_sub = this->create_subscription<std_msgs::msg::Bool>(
             "obstacle_detected", 10,
@@ -97,10 +100,14 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
 
     double target_lookahed_x, target_lookahed_y, target_curvature;
     if (ind < static_cast<int>(cx.size())) {
+        RCLCPP_INFO(this->get_logger(), "注視点更新");
         target_lookahed_x =cx[ind];
         target_lookahed_y = cy[ind];
         target_curvature = ck[ind];
+        RCLCPP_INFO(this->get_logger(), "ind:%d",ind);
+        RCLCPP_INFO(this->get_logger(), "x,y:%lf,%lf",target_lookahed_x, target_lookahed_y);
     } else {
+        RCLCPP_INFO(this->get_logger(), "注視点更新なし");
         target_lookahed_x = cx.back();
         target_lookahed_y = cy.back();
         target_curvature = ck.back();
@@ -109,8 +116,11 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
     
     if (obstacle_detected || avoidance_flag){
         //ロボットと障害物との距離
-        obstacle_x += x;
-        obstacle_y += y;
+
+        //Lidarの場合
+        /*obstacle_x += x;
+        obstacle_y += y;*/
+
         double lenRobotObstacle = calcDistance(obstacle_x, obstacle_y);
         //double lenRobotObstacle = calcDistance(obstacle_x, obstacle_y);
         RCLCPP_INFO(this->get_logger(), "回避開始");
@@ -180,7 +190,7 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
                     target_lookahed_x = xlp;
                     target_lookahed_y = ylp;
                 }
-                //target_curvature = -2.5;
+                target_curvature = -2.5;
                 temp_target_x = target_lookahed_x;
                 temp_target_y = target_lookahed_y;
 
@@ -269,6 +279,8 @@ std::pair<double, double> PurePursuitNode::calcAcceleration(double current_vel, 
 
 
 std::pair<int, double> PurePursuitNode::searchTargetIndex() {
+    double Lf = k * v + Lfc;
+    RCLCPP_INFO(this->get_logger(), "Lf: %lf", Lf);
     if (oldNearestPointIndex == -1) {
         std::vector<double> dx(cx.size()), dy(cy.size());
         for (size_t i = 0; i < cx.size(); ++i) {
@@ -280,28 +292,21 @@ std::pair<int, double> PurePursuitNode::searchTargetIndex() {
         auto it = std::min_element(d.begin(), d.end());
         oldNearestPointIndex = std::distance(d.begin(), it);
     } else {
+        int preInd = oldNearestPointIndex;
         while (true) {
-            double distanceThisIndex = calcDistance(cx[oldNearestPointIndex], cy[oldNearestPointIndex]);
             double distanceNextIndex = calcDistance(cx[oldNearestPointIndex + 1], cy[oldNearestPointIndex + 1]);
-            if (distanceThisIndex < distanceNextIndex) {
+            if(Lf < distanceNextIndex){
                 break;
             }
             oldNearestPointIndex++;
-            if (oldNearestPointIndex >= static_cast<int>(cx.size()) - 1) {
+            //前方注視点の発散を防止
+            int diff = oldNearestPointIndex - preInd;
+            if (diff > 20 or oldNearestPointIndex >= static_cast<int>(cx.size()) - 1) {
                 break;
             }
         }
     }
-
-    double Lf = k * v + Lfc;
-
     int ind = oldNearestPointIndex;
-    while (Lf > calcDistance(cx[ind], cy[ind])) {
-        if (ind + 1 >= static_cast<int>(cx.size())) {
-            break;
-        }
-        ind++;
-    }
 
     return { ind, Lf };
 }
