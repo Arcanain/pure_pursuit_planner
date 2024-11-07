@@ -211,7 +211,7 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
     auto [acceleration_result, delta_time_result] = calcAcceleration(target_vel, current_time);
     double acceleration = acceleration_result;
     double delta_time = delta_time_result;
-    RCLCPP_INFO(this->get_logger(), "acceleration: %lf", acceleration);
+    //RCLCPP_INFO(this->get_logger(), "acceleration: %lf", acceleration);
     // 加速度制限の適用
     if(acceleration > max_acceleration){
         RCLCPP_INFO(this->get_logger(), "acceleration over: %lf", acceleration);
@@ -226,15 +226,23 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
     double alpha = std::atan2(target_lookahed_y - y, target_lookahed_x - x) - yaw;
     double v = target_vel;
     double w = v * std::tan(alpha) / Lf;
+    /*
+    if(abs(alpha) > (M_PI * 8 / 9)){
+        RCLCPP_INFO(this->get_logger(), "limit alpha: %lf", w);
+        w = 0.5;
+    }*/
     if (std::isnan(w)) {
+        RCLCPP_INFO(this->get_logger(), "limit nan: %lf", w);
         w = 0.5;
     }
     if (w > max_angular_velocity) {
+        RCLCPP_INFO(this->get_logger(), "limit w: %lf", w);
         w = max_angular_velocity;
     } else if (w < -max_angular_velocity) {
+        RCLCPP_INFO(this->get_logger(), "limit w: %lf", w);
         w = -max_angular_velocity;
     }
-    RCLCPP_INFO(this->get_logger(), "w: %lf", w);
+    //RCLCPP_INFO(this->get_logger(), "w: %lf", w);
 
     pind = ind;
     return { v, w };
@@ -282,26 +290,33 @@ std::pair<int, double> PurePursuitNode::searchTargetIndex() {
     double Lf = k * v + Lfc;
     RCLCPP_INFO(this->get_logger(), "Lf: %lf", Lf);
     if (oldNearestPointIndex == -1) {
-        std::vector<double> dx(cx.size()), dy(cy.size());
-        for (size_t i = 0; i < cx.size(); ++i) {
-            dx[i] = x - cx[i];
-            dy[i] = y - cy[i];
+        double min_distance = std::numeric_limits<double>::max();
+        int min_index = -1;
+        for (size_t i = 0; i < cx.size(); i++) {
+            double distance = calcDistance(cx[i], cy[i]);
+            if (distance < min_distance) {
+                min_distance = distance;
+                min_index = i;
+            }
         }
-        std::vector<double> d(dx.size());
-        std::transform(dx.begin(), dx.end(), dy.begin(), d.begin(), [](double dx, double dy) { return std::hypot(dx, dy); });
-        auto it = std::min_element(d.begin(), d.end());
-        oldNearestPointIndex = std::distance(d.begin(), it);
+        oldNearestPointIndex = min_index;
     } else {
         int preInd = oldNearestPointIndex;
         while (true) {
+            double distanceNowIndex = calcDistance(cx[oldNearestPointIndex], cy[oldNearestPointIndex]);
             double distanceNextIndex = calcDistance(cx[oldNearestPointIndex + 1], cy[oldNearestPointIndex + 1]);
+            RCLCPP_INFO(this->get_logger(), "distance: %lf, %lf", Lf, distanceNextIndex);
             if(Lf < distanceNextIndex){
+                if(distanceNowIndex < 0.1){
+                    oldNearestPointIndex++;
+                }
                 break;
             }
             oldNearestPointIndex++;
             //前方注視点の発散を防止
             int diff = oldNearestPointIndex - preInd;
             if (diff > 20 or oldNearestPointIndex >= static_cast<int>(cx.size()) - 1) {
+                RCLCPP_INFO(this->get_logger(), "前方注視点の発散を防止");
                 break;
             }
         }

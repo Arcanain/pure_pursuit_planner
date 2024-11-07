@@ -132,12 +132,11 @@ def generate_launch_description():
     )
 
     nodes = [
-        arg_node,
         ros_bag_node,
+        gnss_node,
         map_to_odom,
         baselink_to_navsat,
         rviz_node,
-        gnss_node,
         path_smoother_node,
     ]
 
