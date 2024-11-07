@@ -193,6 +193,7 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
     visualizeTargetCircle(target_lookahed_x, target_lookahed_y);
 
     // target speed
+    target_curvature = 0.3;
     double curvature = std::max(minCurvature, std::min(abs(target_curvature), maxCurvature));
     curvature = curvature / maxCurvature;
     double target_vel = (maxVelocity - minVelocity) * pow(sin(acos(std::cbrt(curvature))), 3) + minVelocity; //[m/s]
