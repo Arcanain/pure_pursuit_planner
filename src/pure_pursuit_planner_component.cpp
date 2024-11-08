@@ -301,27 +301,38 @@ std::pair<int, double> PurePursuitNode::searchTargetIndex() {
         }
         oldNearestPointIndex = min_index;
     } else {
-        int preInd = oldNearestPointIndex;
-        while (true) {
-            double distanceNowIndex = calcDistance(cx[oldNearestPointIndex], cy[oldNearestPointIndex]);
-            double distanceNextIndex = calcDistance(cx[oldNearestPointIndex + 1], cy[oldNearestPointIndex + 1]);
-            RCLCPP_INFO(this->get_logger(), "distance: %lf, %lf", Lf, distanceNextIndex);
-            if(Lf < distanceNextIndex){
-                if(distanceNowIndex < 0.1){
-                    oldNearestPointIndex++;
-                }
-                break;
+        bool count_flag = false;
+        int count = 0, min_index = -1;
+        double min_distance = std::numeric_limits<double>::max();
+        
+        for (size_t i = 0; i < cx.size(); i++)  {
+            double distanceThisIndex = calcDistance(cx[i], cy[i]);
+            double distanceNextIndex = calcDistance(cx[i + 1], cy[i + 1]);
+            if (distanceThisIndex < distanceNextIndex) {
+                count_flag = true;
             }
-            oldNearestPointIndex++;
-            //前方注視点の発散を防止
-            int diff = oldNearestPointIndex - preInd;
-            if (diff > 20 or oldNearestPointIndex >= static_cast<int>(cx.size()) - 1) {
-                RCLCPP_INFO(this->get_logger(), "前方注視点の発散を防止");
-                break;
+            if (count_flag){
+                count ++;
             }
+            if (distanceThisIndex < min_distance) {
+                min_distance = distanceThisIndex;
+                min_index = i;
+            }
+            /*
+            if(count == 200){
+                break;
+            }*/
         }
+        oldNearestPointIndex = min_index;
     }
+
     int ind = oldNearestPointIndex;
+    while (Lf > calcDistance(cx[ind], cy[ind])) {
+        if (ind + 1 >= static_cast<int>(cx.size())) {
+            break;
+        }
+        ind++;
+    }
 
     return { ind, Lf };
 }
