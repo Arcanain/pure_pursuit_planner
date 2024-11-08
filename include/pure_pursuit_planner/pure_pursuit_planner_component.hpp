@@ -95,8 +95,8 @@ private:
     // cauvature parameter
     double minCurvature = 0.0;
     double maxCurvature = 3.0;
-    double minVelocity = 0.8;
-    double maxVelocity = 1.0;
+    double minVelocity = 0.55;
+    double maxVelocity = 0.8;
 
     double max_angular_velocity = 0.9;
 };
