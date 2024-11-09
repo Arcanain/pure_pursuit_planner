@@ -91,7 +91,7 @@ def generate_launch_description():
     ros_bag_node = ExecuteProcess(
         cmd=[
             'ros2', 'bag', 'play', 
-            os.path.expanduser('~/Documents/ros2_bag_file/tukuba_1729737929'),
+            os.path.expanduser('~/rosbag2_1729919458'),
             '--rate','2.0',
             '--remap', '/ublox/fix:=/ublox_gps_node/fix'
         ],

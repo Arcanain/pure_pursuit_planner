@@ -88,15 +88,15 @@ private:
     // pure pursuit parameter
     const double k = 0.5; // look forward gain
     //const double Lfc = 2.0; // [m] look-ahead distance
-    const double Lfc = 1.0; // [m] look-ahead distance
+    const double Lfc = 0.8; // [m] look-ahead distance
     const double Kp = 1.0; // speed proportional gain
     const double dt = 0.1; // [s] time tick
 
     // cauvature parameter
     double minCurvature = 0.0;
     double maxCurvature = 3.0;
-    double minVelocity = 0.55;
-    double maxVelocity = 0.8;
+    double minVelocity = 0.4;
+    double maxVelocity = 0.7;
 
     double max_angular_velocity = 0.9;
 };
