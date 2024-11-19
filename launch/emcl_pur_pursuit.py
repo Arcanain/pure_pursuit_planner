@@ -6,6 +6,13 @@ from launch.actions import ExecuteProcess
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+
+from launch.substitutions import LaunchConfiguration, TextSubstitution
+
+from ament_index_python.packages import get_package_share_directory
+
 
 def generate_launch_description():
     package_name = 'pure_pursuit_planner'
@@ -13,14 +20,32 @@ def generate_launch_description():
     odrive_package = 'odrive_ros2_control'
     judge_package = 'rtk_judge'
     rviz_file_name = "pure_pursuit_planner.rviz"
+    lidar_dir = get_package_share_directory('sllidar_ros2')
+    emcl_dir = get_package_share_directory('emcl2')
 
     file_path = os.path.expanduser('~/ros2_ws/src/arcanain_simulator/urdf/mobile_robot.urdf.xml')
+
+    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
 
     with open(file_path, 'r') as file:
         robot_description = file.read()
 
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare(package_name), "rviz", rviz_file_name]
+    )
+
+    lidar_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(lidar_dir, 'launch', 'sllidar_a1_launch.py')
+        ),
+        launch_arguments={'use_sim_time': use_sim_time}.items()
+    )
+
+    emcl_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(emcl_dir, 'launch', 'emcl2_origin.py')
+        ),
+        launch_arguments={'use_sim_time': use_sim_time}.items()
     )
 
     rviz_node = Node(
@@ -91,8 +116,8 @@ def generate_launch_description():
     ros_bag_node = ExecuteProcess(
         cmd=[
             'ros2', 'bag', 'play', 
-            os.path.expanduser('~/rosbag2_1729919458'),
-            '--rate','1.0',
+            os.path.expanduser('~/Documents/ros2_bag_file/tukuba_1729737929'),
+            '--rate','2.0',
             '--remap', '/ublox/fix:=/ublox_gps_node/fix'
         ],
         output='screen'
@@ -105,12 +130,11 @@ def generate_launch_description():
     )
 
     nodes = [
-        ros_bag_node,
-        rviz_node,
+        lidar_launch,
         robot_description_rviz_node,
         joint_state_publisher_rviz_node,
-        gnss_node,
         odrive_ros2_control_node,
+        emcl_launch,
         rtk_judge_node,
         odometry_pub_node ,
         path_publisher_node,
