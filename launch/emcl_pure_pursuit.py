@@ -132,7 +132,7 @@ def generate_launch_description():
 
     rtk_judge_node = Node(
         package=judge_package,
-        executable='judge_rtk_status',
+        executable='switch_gnss_emcl_status_visualization',
         output="screen",
     )
 
