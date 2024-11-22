@@ -41,6 +41,13 @@ def generate_launch_description():
         launch_arguments={'use_sim_time': use_sim_time}.items()
     )
 
+    perception_obstacle_node = Node(
+           package='sllidar_ros2',
+           executable='perception_obstacle',
+           name='perception_obstacle',
+           output='screen'
+    )
+
     emcl_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(emcl_dir, 'launch', 'emcl2_origin.py')
@@ -74,7 +81,7 @@ def generate_launch_description():
 
     odometry_pub_node = Node(
         package=simulator_package,
-        executable='odrive_gps_switch_pub',
+        executable='emcl_odom_pub',
         output="screen",
     )
 
@@ -131,6 +138,7 @@ def generate_launch_description():
 
     nodes = [
         lidar_launch,
+        perception_obstacle_node,
         robot_description_rviz_node,
         joint_state_publisher_rviz_node,
         odrive_ros2_control_node,
