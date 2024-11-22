@@ -1,13 +1,26 @@
 import os
 
 from launch import LaunchDescription
-from launch.substitutions import PathJoinSubstitution
+from launch.substitutions import PathJoinSubstitution,LaunchConfiguration
 from launch.actions import ExecuteProcess
-from launch_ros.actions import Node
+from launch_ros.actions import Node, DeclareLaunchArgument
 from launch_ros.substitutions import FindPackageShare
 
 
+
 def generate_launch_description():
+    # 引数の宣言（コマンドライン引数で指定可能にする）
+    odometry_init_x_arg = DeclareLaunchArgument(
+        "init_x", default_value="0.0", description="Initial x position for odometry_pub"
+    )
+    odometry_init_y_arg = DeclareLaunchArgument(
+        "init_y", default_value="0.0", description="Initial y position for odometry_pub"
+    )
+    odometry_init_th_arg = DeclareLaunchArgument(
+        "init_th", default_value="0.0", description="Initial theta for odometry_pub"
+    )
+
+
     package_name = 'pure_pursuit_planner'
     simulator_package = 'arcanain_simulator'
     odrive_package = 'odrive_ros2_control'
@@ -51,6 +64,11 @@ def generate_launch_description():
         package=simulator_package,
         executable='odrive_gps_switch_pub',
         output="screen",
+        parameters=[
+            {"init_x": LaunchConfiguration("init_x")},
+            {"init_y": LaunchConfiguration("init_y")},
+            {"init_th": LaunchConfiguration("init_th")}
+        ]
     )
 
     obstacle_pub_node = Node(
@@ -105,6 +123,9 @@ def generate_launch_description():
     )
 
     nodes = [
+        odometry_init_x_arg,
+        odometry_init_y_arg,
+        odometry_init_th_arg,
         rviz_node,
         robot_description_rviz_node,
         joint_state_publisher_rviz_node,
