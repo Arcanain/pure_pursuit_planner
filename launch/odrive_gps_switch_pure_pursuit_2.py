@@ -6,13 +6,6 @@ from launch.actions import ExecuteProcess
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
-from launch.actions import IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-
-from launch.substitutions import LaunchConfiguration, TextSubstitution
-
-from ament_index_python.packages import get_package_share_directory
-
 
 def generate_launch_description():
     package_name = 'pure_pursuit_planner'
@@ -20,39 +13,14 @@ def generate_launch_description():
     odrive_package = 'odrive_ros2_control'
     judge_package = 'rtk_judge'
     rviz_file_name = "pure_pursuit_planner.rviz"
-    lidar_dir = get_package_share_directory('sllidar_ros2')
-    emcl_dir = get_package_share_directory('emcl2')
 
     file_path = os.path.expanduser('~/ros2_ws/src/arcanain_simulator/urdf/mobile_robot.urdf.xml')
-
-    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
 
     with open(file_path, 'r') as file:
         robot_description = file.read()
 
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare(package_name), "rviz", rviz_file_name]
-    )
-
-    lidar_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(lidar_dir, 'launch', 'sllidar_a1_launch.py')
-        ),
-        launch_arguments={'use_sim_time': use_sim_time}.items()
-    )
-
-    perception_obstacle_node = Node(
-           package='sllidar_ros2',
-           executable='perception_obstacle',
-           name='perception_obstacle',
-           output='screen'
-    )
-
-    emcl_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(emcl_dir, 'launch', 'emcl2_origin.py')
-        ),
-        launch_arguments={'use_sim_time': use_sim_time}.items()
     )
 
     rviz_node = Node(
@@ -81,7 +49,7 @@ def generate_launch_description():
 
     odometry_pub_node = Node(
         package=simulator_package,
-        executable='emcl_odom_pub',
+        executable='odrive_gps_switch_pub',
         output="screen",
     )
 
@@ -93,7 +61,7 @@ def generate_launch_description():
 
     odrive_ros2_control_node = Node(
         package=odrive_package,
-        executable='control_odrive_and_odom_pub',
+        executable='control_odrive_and_odom_pub_2',
         output="screen",
     )
 
@@ -132,17 +100,16 @@ def generate_launch_description():
 
     rtk_judge_node = Node(
         package=judge_package,
-        executable='judge_rtk_status',
+        executable='judge_rtk_status_origin',
         output="screen",
     )
 
     nodes = [
-        lidar_launch,
-        perception_obstacle_node,
+        rviz_node,
         robot_description_rviz_node,
         joint_state_publisher_rviz_node,
+        gnss_node,
         odrive_ros2_control_node,
-        emcl_launch,
         rtk_judge_node,
         odometry_pub_node ,
         path_publisher_node,
