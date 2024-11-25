@@ -53,6 +53,7 @@ private:
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr obstacle_range_pub;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr target_point_pub;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr lidar_range_pub;
+    rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr goal_status_pub;
 
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub;
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr path_sub;

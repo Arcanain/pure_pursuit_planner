@@ -23,6 +23,8 @@ PurePursuitNode::PurePursuitNode()
       "obstacle_range_marker",
       10);
 
+    goal_status_pub = this->create_publisher<std_msgs::msg::Bool>("goal_status", 10);
+
     target_point_pub = this->create_publisher<visualization_msgs::msg::Marker>("target_point_marker", 10);
 
     
@@ -534,10 +536,16 @@ void PurePursuitNode::publishCmd(double v, double w)
     // goal judgement
     if (goal_dist < goal_threshold) {
         std::cout << "Goal!" << std::endl;
+        std_msgs::msg::Bool goal_status_msg;
+        goal_status_msg.data = true;
+        goal_status_pub->publish(goal_status_msg);
 
         cmd_vel_msg.linear.x = 0.0;
         cmd_vel_msg.angular.z = 0.0;
     } else {
+        std_msgs::msg::Bool goal_status_msg;
+        goal_status_msg.data = false;
+        goal_status_pub->publish(goal_status_msg);
         cmd_vel_msg.linear.x = v;
         cmd_vel_msg.angular.z = w;
     }
