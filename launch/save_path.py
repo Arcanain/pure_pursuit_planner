@@ -84,6 +84,12 @@ def generate_launch_description():
         output="screen",
     )
 
+    odrive_imu_control_node = Node(
+        package=odrive_package,
+        executable='control_odrive_use_imu',
+        output="screen",
+    )
+
     path_publisher_node = Node(
         package='path_smoother',
         executable='path_publisher',
@@ -102,13 +108,24 @@ def generate_launch_description():
         output="screen",
     )
 
+    imu_node = Node(
+        package='adi_imu_tr_driver_ros2',
+        executable='adis_rcv_csv_node',
+        output="screen",
+        parameters=[
+            {"mode": "Attitude"},
+            {"device": "/dev/ttyACM_IMU"},
+        ],
+    )
+
     nodes = [
         rviz_node,
+        imu_node,
         robot_description_rviz_node,
         joint_state_publisher_rviz_node,
         joy_linux_node,
         joy_to_twist_node,
-        odrive_ros2_control_node,
+        odrive_imu_control_node,
         odometry_pub_node,
         path_smoother_node,
     ]

@@ -93,7 +93,7 @@ def generate_launch_description():
 
     odrive_ros2_control_node = Node(
         package=odrive_package,
-        executable='control_odrive_and_odom_pub',
+        executable='control_odrive_use_imu_tf',
         output="screen",
     )
 
@@ -113,6 +113,9 @@ def generate_launch_description():
         package=package_name,
         executable='pure_pursuit_planner',
         output="screen",
+        remappings=[
+            ('goal_status', 'goal_status2'),
+        ],
     )
     gnss_node = Node(
         package='gnss_preprocessing',
@@ -136,14 +139,24 @@ def generate_launch_description():
         output="screen",
     )
 
+    imu_node = Node(
+        package='adi_imu_tr_driver_ros2',
+        executable='adis_rcv_csv_node',
+        output="screen",
+        parameters=[
+            {"mode": "Attitude"},
+            {"device": "/dev/ttyACM_IMU"},
+        ],
+    )
+
     nodes = [
         lidar_launch,
+        imu_node,
         perception_obstacle_node,
         robot_description_rviz_node,
         joint_state_publisher_rviz_node,
         odrive_ros2_control_node,
         emcl_launch,
-        rtk_judge_node,
         odometry_pub_node ,
         path_publisher_node,
         pure_pursuit_planner_node,

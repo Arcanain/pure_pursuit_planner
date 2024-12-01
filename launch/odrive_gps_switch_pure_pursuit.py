@@ -28,10 +28,12 @@ def generate_launch_description():
 
     lidar_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(lidar_dir, 'launch', 'sllidar_a1_launch.py')
+            os.path.join(lidar_dir, 'launch', 'sllidar_s2_launch.py')
         ),
         launch_arguments={'use_sim_time': use_sim_time}.items()
     )
+
+    
 
     perception_obstacle_node = Node(
            package='sllidar_ros2',
@@ -42,6 +44,13 @@ def generate_launch_description():
 
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare(package_name), "rviz", rviz_file_name]
+    )
+
+    dummy_node = Node(
+    package='tf2_ros',
+    executable='static_transform_publisher',
+    output='screen',
+    arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'map', 'dummy_link']
     )
 
     rviz_node = Node(
@@ -82,7 +91,7 @@ def generate_launch_description():
 
     odrive_ros2_control_node = Node(
         package=odrive_package,
-        executable='control_odrive_and_odom_pub',
+        executable='control_odrive_use_imu',
         output="screen",
     )
 
@@ -126,6 +135,7 @@ def generate_launch_description():
     )
 
     nodes = [
+        dummy_node,
         rviz_node,
         lidar_launch,
         perception_obstacle_node,
