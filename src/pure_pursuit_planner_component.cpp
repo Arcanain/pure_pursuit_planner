@@ -287,7 +287,6 @@ std::pair<double, double> PurePursuitNode::calcAcceleration(double current_vel, 
 }
 
 
-
 std::pair<int, double> PurePursuitNode::searchTargetIndex() {
     double Lf = k * v + Lfc;
     RCLCPP_INFO(this->get_logger(), "Lf: %lf", Lf);
@@ -307,8 +306,15 @@ std::pair<int, double> PurePursuitNode::searchTargetIndex() {
         int count = 0, min_index = -1;
         double min_distance = std::numeric_limits<double>::max();
         
-        for (size_t i = 0; i < cx.size(); i++)  {
-            double distanceThisIndex = calcDistance(cx[i], cy[i]);
+        std::vector<double> min_distance_list; 
+        std::vector<int> min_distance_idx_list; 
+        min_distance_list.clear();
+        min_distance_idx_list.clear();
+
+        
+        //for (size_t i = 0; i < cx.size(); i++)  {
+        for (size_t i = oldNearestPointIndex-20 ; i < cx.size(); i++)  {
+            double distanceThisIndex = calcDistance(cx[i],     cy[i]);
             double distanceNextIndex = calcDistance(cx[i + 1], cy[i + 1]);
             if (distanceThisIndex < distanceNextIndex) {
                 count_flag = true;
@@ -318,13 +324,29 @@ std::pair<int, double> PurePursuitNode::searchTargetIndex() {
             }
             if (distanceThisIndex < min_distance) {
                 min_distance = distanceThisIndex;
-                min_index = i;
+                //min_index = i;
+                //RCLCPP_INFO(this->get_logger(), "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
+                //RCLCPP_INFO(this->get_logger(), "Received path point: (%d)", min_index);
+                // 配列に保存
+                min_distance_list.push_back(min_distance);
+                min_distance_idx_list.push_back(i);
             }
-            /*
-            if(count == 200){
-                break;
-            }*/
+            
         }
+        // add find the index of path nearest to the current index from list 'min_distance_idx_lst'
+        int tmp_idx_dis;
+	    int min_idx_distance = std::numeric_limits<int>::max();
+        for (size_t j=0; j < min_distance_idx_list.size() ;j++){
+            tmp_idx_dis = min_distance_idx_list[j]-oldNearestPointIndex;
+            if ( min_idx_distance > tmp_idx_dis){
+                if (tmp_idx_dis < 100 ){
+                    min_index = min_distance_idx_list[j];
+                    //RCLCPP_INFO(this->get_logger(), "CCCC path point: (%ld)", min_distance_idx_list.size());
+        
+                }
+		    }
+        }
+        RCLCPP_INFO(this->get_logger(), "index of path point: (%ld)", min_distance_idx_list.size());
         oldNearestPointIndex = min_index;
     }
 
@@ -335,9 +357,61 @@ std::pair<int, double> PurePursuitNode::searchTargetIndex() {
         }
         ind++;
     }
-
     return { ind, Lf };
 }
+
+
+
+//std::pair<int, double> PurePursuitNode::searchTargetIndex() {
+//    double Lf = k * v + Lfc;
+//    RCLCPP_INFO(this->get_logger(), "Lf: %lf", Lf);
+//    if (oldNearestPointIndex == -1) {
+//        double min_distance = std::numeric_limits<double>::max();
+//        int min_index = -1;
+//        for (size_t i = 0; i < cx.size(); i++) {
+//            double distance = calcDistance(cx[i], cy[i]);
+//            if (distance < min_distance) {
+//                min_distance = distance;
+//                min_index = i;
+//            }
+//        }
+//        oldNearestPointIndex = min_index;
+//    } else {
+//        bool count_flag = false;
+//        int count = 0, min_index = -1;
+//        double min_distance = std::numeric_limits<double>::max();
+//        
+//        for (size_t i = 0; i < cx.size(); i++)  {
+//            double distanceThisIndex = calcDistance(cx[i], cy[i]);
+//            double distanceNextIndex = calcDistance(cx[i + 1], cy[i + 1]);
+//            if (distanceThisIndex < distanceNextIndex) {
+//                count_flag = true;
+//            }
+//            if (count_flag){
+//                count ++;
+//            }
+//            if (distanceThisIndex < min_distance) {
+//                min_distance = distanceThisIndex;
+//                min_index = i;
+//            }
+//            /*
+//            if(count == 200){
+//                break;
+//            }*/
+//        }
+//        oldNearestPointIndex = min_index;
+//    }
+//
+//    int ind = oldNearestPointIndex;
+//    while (Lf > calcDistance(cx[ind], cy[ind])) {
+//        if (ind + 1 >= static_cast<int>(cx.size())) {
+//            break;
+//        }
+//        ind++;
+//    }
+//
+//    return { ind, Lf };
+//}
 
 //前方注視点のドットを可視化
 void PurePursuitNode::visualizeTargetPoint(double target_lookahed_x, double target_lookahed_y) {
