@@ -80,7 +80,7 @@ def generate_launch_description():
 
     odrive_ros2_control_node = Node(
         package=odrive_package,
-        executable='control_odrive_and_odom_pub',
+        executable='control_odrive_and_odom_pub_gps',
         output="screen",
     )
 
@@ -92,7 +92,7 @@ def generate_launch_description():
     
     path_smoother_node = Node(
         package='path_smoother',
-        executable='save_path',
+        executable='save_path_gnss',
         output="screen",
     )
 
@@ -108,8 +108,23 @@ def generate_launch_description():
         output='screen'
     )
 
+    joy_linux_node = Node(
+        package='joy_linux',
+        executable='joy_linux_node',
+        name='joy_linux_node',
+        output='screen'
+    )
+    joy_to_twist_node = Node(
+            package='ros2_joy_to_twist',
+            executable='joy_to_twist',
+            name='joy_to_twist',
+            output='screen'
+    )
+
     nodes = [
         rviz_node,
+        joy_linux_node,
+        joy_to_twist_node,
         robot_description_rviz_node,
         joint_state_publisher_rviz_node,
         gnss_node,

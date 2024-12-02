@@ -97,7 +97,7 @@ def generate_launch_description():
 
     path_publisher_node = Node(
         package='path_smoother',
-        executable='path_publisher',
+        executable='path_publisher_gps',
         output="screen",
     )
     
@@ -133,9 +133,19 @@ def generate_launch_description():
         executable='judge_rtk_status_origin',
         output="screen",
     )
+    imu_node = Node(
+        package='adi_imu_tr_driver_ros2',
+        executable='adis_rcv_csv_node',
+        output="screen",
+        parameters=[
+            {"mode": "Attitude"},
+            {"device": "/dev/ttyACM_IMU"},
+        ],
+    )
 
     nodes = [
         dummy_node,
+        imu_node,
         rviz_node,
         lidar_launch,
         perception_obstacle_node,

@@ -312,7 +312,7 @@ std::pair<int, double> PurePursuitNode::searchTargetIndex() {
         min_distance_idx_list.clear();
 
         
-        //for (size_t i = 0; i < cx.size(); i++)  {
+        
         for (size_t i = oldNearestPointIndex-20 ; i < cx.size(); i++)  {
             double distanceThisIndex = calcDistance(cx[i],     cy[i]);
             double distanceNextIndex = calcDistance(cx[i + 1], cy[i + 1]);
@@ -361,57 +361,6 @@ std::pair<int, double> PurePursuitNode::searchTargetIndex() {
 }
 
 
-
-//std::pair<int, double> PurePursuitNode::searchTargetIndex() {
-//    double Lf = k * v + Lfc;
-//    RCLCPP_INFO(this->get_logger(), "Lf: %lf", Lf);
-//    if (oldNearestPointIndex == -1) {
-//        double min_distance = std::numeric_limits<double>::max();
-//        int min_index = -1;
-//        for (size_t i = 0; i < cx.size(); i++) {
-//            double distance = calcDistance(cx[i], cy[i]);
-//            if (distance < min_distance) {
-//                min_distance = distance;
-//                min_index = i;
-//            }
-//        }
-//        oldNearestPointIndex = min_index;
-//    } else {
-//        bool count_flag = false;
-//        int count = 0, min_index = -1;
-//        double min_distance = std::numeric_limits<double>::max();
-//        
-//        for (size_t i = 0; i < cx.size(); i++)  {
-//            double distanceThisIndex = calcDistance(cx[i], cy[i]);
-//            double distanceNextIndex = calcDistance(cx[i + 1], cy[i + 1]);
-//            if (distanceThisIndex < distanceNextIndex) {
-//                count_flag = true;
-//            }
-//            if (count_flag){
-//                count ++;
-//            }
-//            if (distanceThisIndex < min_distance) {
-//                min_distance = distanceThisIndex;
-//                min_index = i;
-//            }
-//            /*
-//            if(count == 200){
-//                break;
-//            }*/
-//        }
-//        oldNearestPointIndex = min_index;
-//    }
-//
-//    int ind = oldNearestPointIndex;
-//    while (Lf > calcDistance(cx[ind], cy[ind])) {
-//        if (ind + 1 >= static_cast<int>(cx.size())) {
-//            break;
-//        }
-//        ind++;
-//    }
-//
-//    return { ind, Lf };
-//}
 
 //前方注視点のドットを可視化
 void PurePursuitNode::visualizeTargetPoint(double target_lookahed_x, double target_lookahed_y) {
