@@ -102,14 +102,14 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
 
     double target_lookahed_x, target_lookahed_y, target_curvature;
     if (ind < static_cast<int>(cx.size())) {
-        RCLCPP_INFO(this->get_logger(), "注視点更新");
+        //RCLCPP_INFO(this->get_logger(), "注視点更新");
         target_lookahed_x =cx[ind];
         target_lookahed_y = cy[ind];
         target_curvature = ck[ind];
         RCLCPP_INFO(this->get_logger(), "ind:%d",ind);
-        RCLCPP_INFO(this->get_logger(), "x,y:%lf,%lf",target_lookahed_x, target_lookahed_y);
+        //RCLCPP_INFO(this->get_logger(), "x,y:%lf,%lf",target_lookahed_x, target_lookahed_y);
     } else {
-        RCLCPP_INFO(this->get_logger(), "注視点更新なし");
+        //RCLCPP_INFO(this->get_logger(), "注視点更新なし");
         target_lookahed_x = cx.back();
         target_lookahed_y = cy.back();
         target_curvature = ck.back();
@@ -224,7 +224,7 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
         RCLCPP_INFO(this->get_logger(), "limited_acceleration: %lf", limited_acceleration);
     }
 
-    RCLCPP_INFO(this->get_logger(), "target_vel: %lf", target_vel*3.6);
+    //RCLCPP_INFO(this->get_logger(), "target_vel: %lf", target_vel*3.6);
     double alpha = std::atan2(target_lookahed_y - y, target_lookahed_x - x) - yaw;
     double v = target_vel;
     double w = v * std::tan(alpha) / Lf;
@@ -288,76 +288,80 @@ std::pair<double, double> PurePursuitNode::calcAcceleration(double current_vel, 
 
 
 std::pair<int, double> PurePursuitNode::searchTargetIndex() {
-    double Lf = k * v + Lfc;
-    RCLCPP_INFO(this->get_logger(), "Lf: %lf", Lf);
-    if (oldNearestPointIndex == -1) {
-        double min_distance = std::numeric_limits<double>::max();
-        int min_index = -1;
-        for (size_t i = 0; i < cx.size(); i++) {
-            double distance = calcDistance(cx[i], cy[i]);
-            if (distance < min_distance) {
-                min_distance = distance;
-                min_index = i;
-            }
-        }
-        oldNearestPointIndex = min_index;
-    } else {
-        bool count_flag = false;
-        int count = 0, min_index = -1;
-        double min_distance = std::numeric_limits<double>::max();
-        
-        std::vector<double> min_distance_list; 
-        std::vector<int> min_distance_idx_list; 
-        min_distance_list.clear();
-        min_distance_idx_list.clear();
-
-        
-        
-        for (size_t i = oldNearestPointIndex-20 ; i < cx.size(); i++)  {
-            double distanceThisIndex = calcDistance(cx[i],     cy[i]);
-            double distanceNextIndex = calcDistance(cx[i + 1], cy[i + 1]);
-            if (distanceThisIndex < distanceNextIndex) {
-                count_flag = true;
-            }
-            if (count_flag){
-                count ++;
-            }
-            if (distanceThisIndex < min_distance) {
-                min_distance = distanceThisIndex;
-                //min_index = i;
-                //RCLCPP_INFO(this->get_logger(), "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
-                //RCLCPP_INFO(this->get_logger(), "Received path point: (%d)", min_index);
-                // 配列に保存
-                min_distance_list.push_back(min_distance);
-                min_distance_idx_list.push_back(i);
-            }
-            
-        }
-        // add find the index of path nearest to the current index from list 'min_distance_idx_lst'
-        int tmp_idx_dis;
-	    int min_idx_distance = std::numeric_limits<int>::max();
-        for (size_t j=0; j < min_distance_idx_list.size() ;j++){
-            tmp_idx_dis = min_distance_idx_list[j]-oldNearestPointIndex;
-            if ( min_idx_distance > tmp_idx_dis){
-                if (tmp_idx_dis < 100 ){
-                    min_index = min_distance_idx_list[j];
-                    //RCLCPP_INFO(this->get_logger(), "CCCC path point: (%ld)", min_distance_idx_list.size());
-        
+    if (path_subscribe_flag && odom_subscribe_flag) {
+        double Lf = k * v + Lfc;
+        RCLCPP_INFO(this->get_logger(), "Lf: %lf", Lf);
+        if (oldNearestPointIndex == -1) {
+            double min_distance = std::numeric_limits<double>::max();
+            int min_index = -1;
+            RCLCPP_INFO(this->get_logger(), "init x, y: %lf, %lf", x, y);
+            for (size_t i = 0; i < cx.size(); i++) {
+                double distance = calcDistance(cx[i], cy[i]);
+                if (distance < min_distance) {
+                    min_distance = distance;
+                    min_index = i;
                 }
-		    }
-        }
-        RCLCPP_INFO(this->get_logger(), "index of path point: (%ld)", min_distance_idx_list.size());
-        oldNearestPointIndex = min_index;
-    }
+            }
+            oldNearestPointIndex = min_index;
+        } else {
+            bool count_flag = false;
+            int count = 0, min_index = -1;
+            double min_distance = std::numeric_limits<double>::max();
+            
+            std::vector<double> min_distance_list; 
+            std::vector<int> min_distance_idx_list; 
+            min_distance_list.clear();
+            min_distance_idx_list.clear();
 
-    int ind = oldNearestPointIndex;
-    while (Lf > calcDistance(cx[ind], cy[ind])) {
-        if (ind + 1 >= static_cast<int>(cx.size())) {
-            break;
+            
+            
+            for (size_t i = oldNearestPointIndex-20 ; i < cx.size(); i++)  {
+                double distanceThisIndex = calcDistance(cx[i],     cy[i]);
+                double distanceNextIndex = calcDistance(cx[i + 1], cy[i + 1]);
+                if (distanceThisIndex < distanceNextIndex) {
+                    count_flag = true;
+                }
+                if (count_flag){
+                    count ++;
+                }
+                if (distanceThisIndex < min_distance) {
+                    min_distance = distanceThisIndex;
+                    //min_index = i;
+                    //RCLCPP_INFO(this->get_logger(), "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
+                    //RCLCPP_INFO(this->get_logger(), "Received path point: (%d)", min_index);
+                    // 配列に保存
+                    min_distance_list.push_back(min_distance);
+                    min_distance_idx_list.push_back(i);
+                }
+                
+            }
+            // add find the index of path nearest to the current index from list 'min_distance_idx_lst'
+            int tmp_idx_dis;
+            int min_idx_distance = std::numeric_limits<int>::max();
+            for (size_t j=0; j < min_distance_idx_list.size() ;j++){
+                tmp_idx_dis = min_distance_idx_list[j]-oldNearestPointIndex;
+                if ( min_idx_distance > tmp_idx_dis){
+                    if (tmp_idx_dis < 100 ){
+                        min_index = min_distance_idx_list[j];
+                        //RCLCPP_INFO(this->get_logger(), "CCCC path point: (%ld)", min_distance_idx_list.size());
+            
+                    }
+                }
+            }
+            RCLCPP_INFO(this->get_logger(), "index of path point: (%ld)", min_distance_idx_list.size());
+            oldNearestPointIndex = min_index;
+        
         }
-        ind++;
+
+        int ind = oldNearestPointIndex;
+        while (Lf > calcDistance(cx[ind], cy[ind])) {
+            if (ind + 1 >= static_cast<int>(cx.size())) {
+                break;
+            }
+            ind++;
+        }
+        return { ind, Lf };
     }
-    return { ind, Lf };
 }
 
 
@@ -454,6 +458,9 @@ void PurePursuitNode::odometry_callback(const nav_msgs::msg::Odometry::SharedPtr
     mat.getRPY(roll_tmp, pitch_tmp, yaw_tmp);
 
     yaw = yaw_tmp;
+    if (!odom_subscribe_flag){
+        RCLCPP_INFO(this->get_logger(), "odom init x, y: %lf, %lf", x, y);
+    }
 
     odom_subscribe_flag = true;
 }
@@ -538,7 +545,7 @@ void PurePursuitNode::path_callback(const nav_msgs::msg::Path::SharedPtr msg) {
             mat.getRPY(roll_rev, pitch_rev, yaw_rev);
             cyaw.push_back(yaw_rev);
 
-            RCLCPP_INFO(this->get_logger(), "Received path point: (%f, %f)", pose.pose.position.x, pose.pose.position.y);
+            //RCLCPP_INFO(this->get_logger(), "Received path point: (%f, %f)", pose.pose.position.x, pose.pose.position.y);
         }
 
         // 最新のパスに基づいて目標インデックスを更新
@@ -559,16 +566,10 @@ void PurePursuitNode::publishCmd(double v, double w)
     // goal judgement
     if (goal_dist < goal_threshold) {
         std::cout << "Goal!" << std::endl;
-        std_msgs::msg::Bool goal_status_msg;
-        goal_status_msg.data = true;
-        goal_status_pub->publish(goal_status_msg);
 
         cmd_vel_msg.linear.x = 0.0;
         cmd_vel_msg.angular.z = 0.0;
     } else {
-        std_msgs::msg::Bool goal_status_msg;
-        goal_status_msg.data = false;
-        goal_status_pub->publish(goal_status_msg);
         cmd_vel_msg.linear.x = v;
         cmd_vel_msg.angular.z = w;
     }
