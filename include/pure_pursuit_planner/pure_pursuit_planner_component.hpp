@@ -34,6 +34,8 @@ public:
 
     bool avoidance_flag = false;
 
+    bool goal_flag = false;
+
 private:
     void updateControl();
     std::pair<double, double> purePursuitControl(int& pind);
