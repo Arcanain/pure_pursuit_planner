@@ -555,23 +555,24 @@ void PurePursuitNode::publishCmd(double v, double w)
     double goal_x = cx[cx.size() - 1];
     double goal_y = cy[cy.size() - 1];
     double goal_dist = std::abs(std::sqrt(std::pow((goal_x - x), 2.0) + std::pow((goal_y - y), 2.0)));
-
     // goal judgement
     if (goal_dist < goal_threshold) {
         std::cout << "Goal!" << std::endl;
-        std_msgs::msg::Bool goal_status_msg;
-        goal_status_msg.data = true;
-        goal_status_pub->publish(goal_status_msg);
-
+        goal_flag = true;
         cmd_vel_msg.linear.x = 0.0;
         cmd_vel_msg.angular.z = 0.0;
     } else {
-        std_msgs::msg::Bool goal_status_msg;
-        goal_status_msg.data = false;
-        goal_status_pub->publish(goal_status_msg);
+        if (goal_flag){
+            v = 0.0;
+            w = 0.0;
+        }
         cmd_vel_msg.linear.x = v;
-        cmd_vel_msg.angular.z = w;
+        cmd_vel_msg.angular.z = w; 
     }
+
+    std_msgs::msg::Bool goal_status_msg;
+    goal_status_msg.data = goal_flag;
+    goal_status_pub->publish(goal_status_msg);
 
     cmd_vel_pub->publish(cmd_vel_msg);
 }
