@@ -66,7 +66,7 @@ def generate_launch_description():
 
     path_publisher_node = Node(
         package='path_smoother',
-        executable='path_publisher_gps_last',
+        executable='path_publisher_gps',
         output="screen",
     )
     
