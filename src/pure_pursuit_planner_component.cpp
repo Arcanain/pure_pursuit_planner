@@ -226,8 +226,14 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
 
     RCLCPP_INFO(this->get_logger(), "target_vel: %lf", target_vel*3.6);
     double alpha = std::atan2(target_lookahed_y - y, target_lookahed_x - x) - yaw;
+    if (abs(alpha - M_PI)> 0.0000001){
+        alpha = alpha + 0.1;
+    }
+    RCLCPP_INFO(this->get_logger(), "#### alpha: %lf", alpha);
     double v = target_vel;
-    double w = v * std::tan(alpha) / Lf;
+    //double w = v * std::tan(alpha) / Lf;  
+    double w = v* 2* std::sin(alpha) / Lf;
+    
     /*
     if(abs(alpha) > (M_PI * 8 / 9)){
         RCLCPP_INFO(this->get_logger(), "limit alpha: %lf", w);
