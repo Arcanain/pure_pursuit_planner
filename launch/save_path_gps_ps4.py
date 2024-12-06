@@ -123,9 +123,12 @@ def generate_launch_description():
 
     nodes = [
         rviz_node,
+        joy_linux_node,
+        joy_to_twist_node,
         robot_description_rviz_node,
         joint_state_publisher_rviz_node,
         gnss_node,
+        odrive_ros2_control_node,
         odometry_pub_node,
         path_smoother_node,
     ]
