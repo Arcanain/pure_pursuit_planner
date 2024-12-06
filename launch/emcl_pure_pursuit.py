@@ -93,7 +93,7 @@ def generate_launch_description():
 
     odrive_ros2_control_node = Node(
         package=odrive_package,
-        executable='control_odrive_use_imu_tf',
+        executable='control_odrive_and_odom_pub',
         output="screen",
     )
 
