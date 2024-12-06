@@ -157,7 +157,7 @@ def generate_launch_description():
         joint_state_publisher_rviz_node,
         odrive_ros2_control_node,
         emcl_launch,
-        odometry_pub_node ,
+        odometry_pub_node,
         path_publisher_node,
         pure_pursuit_planner_node,
     ]
