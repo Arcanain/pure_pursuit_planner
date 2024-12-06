@@ -232,7 +232,7 @@ std::pair<double, double> PurePursuitNode::purePursuitControl(int& pind) {
     RCLCPP_INFO(this->get_logger(), "#### alpha: %lf", alpha);
     double v = target_vel;
     //double w = v * std::tan(alpha) / Lf;  
-    double w = v* 2* std::sin(alpha) / Lf;
+    double w = v* std::sin(alpha) / Lf;
     
     /*
     if(abs(alpha) > (M_PI * 8 / 9)){
