@@ -112,7 +112,7 @@ def generate_launch_description():
         executable='pure_pursuit_planner',
         output="screen",
         remappings=[
-            ('goal_status', 'goal_status2'),
+            ('goal_status', 'goal_status3'),
         ],
     )
     gnss_node = Node(
