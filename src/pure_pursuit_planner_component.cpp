@@ -46,7 +46,7 @@ PurePursuitNode::PurePursuitNode()
             std::bind(&PurePursuitNode::local_obstacle_callback, this, _1));*/
             
     obstacle_detected_sub = this->create_subscription<std_msgs::msg::Bool>(
-            "obstacle_detected", 10,
+            "obstacle_detected_temp", 10,
             std::bind(&PurePursuitNode::obstacle_detected_callback, this, _1));
 
     current_time = this->get_clock()->now();
@@ -294,6 +294,7 @@ std::pair<double, double> PurePursuitNode::calcAcceleration(double current_vel, 
 
 
 std::pair<int, double> PurePursuitNode::searchTargetIndex() {
+    if (odom_subscribe_flag){
     double Lf = k * v + Lfc;
     RCLCPP_INFO(this->get_logger(), "Lf: %lf", Lf);
     if (oldNearestPointIndex == -1) {
@@ -364,6 +365,7 @@ std::pair<int, double> PurePursuitNode::searchTargetIndex() {
         ind++;
     }
     return { ind, Lf };
+    }
 }
 
 
