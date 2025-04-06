@@ -21,6 +21,13 @@ def generate_launch_description():
         [FindPackageShare(package_name), "rviz", rviz_file_name]
     )
 
+    dummy_node = Node(
+    package='tf2_ros',
+    executable='static_transform_publisher',
+    output='screen',
+    arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'map', 'dummy_link']
+    )
+
     rviz_node = Node(
         package="rviz2",
         executable="rviz2",
@@ -51,9 +58,15 @@ def generate_launch_description():
         output="screen",
     )
 
+    obstacle_pub_node = Node(
+        package=simulator_package,
+        executable='obstacle_pub',
+        output="screen",
+    )
+
     path_publisher_node = Node(
         package='path_smoother',
-        executable='path_publisher',
+        executable='path_publisher_gps_04',
         output="screen",
     )
     
@@ -71,6 +84,7 @@ def generate_launch_description():
 
     nodes = [
         rviz_node,
+        dummy_node,
         robot_description_rviz_node,
         joint_state_publisher_rviz_node,
         odometry_pub_node,

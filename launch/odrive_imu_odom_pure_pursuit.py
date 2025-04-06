@@ -10,6 +10,7 @@ from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
     package_name = 'pure_pursuit_planner'
     simulator_package = 'arcanain_simulator'
+    odrive_package = 'odrive_ros2_control'
     rviz_file_name = "pure_pursuit_planner.rviz"
 
     file_path = os.path.expanduser('~/ros2_ws/src/arcanain_simulator/urdf/mobile_robot.urdf.xml')
@@ -45,9 +46,27 @@ def generate_launch_description():
         parameters=[{'joint_state_publisher': robot_description}]
     )
 
+    bwt901cl_pkg_node = Node(
+        package='bwt901cl_pkg',
+        executable='imu_bwt901cl',
+        output="screen",
+    )
+
     odometry_pub_node = Node(
         package=simulator_package,
-        executable='odometry_pub',
+        executable='odrive_imu_odom_pub',
+        output="screen",
+    )
+
+    obstacle_pub_node = Node(
+        package=simulator_package,
+        executable='obstacle_pub',
+        output="screen",
+    )
+
+    odrive_ros2_control_node = Node(
+        package=odrive_package,
+        executable='control_odrive_and_odom_pub',
         output="screen",
     )
 
@@ -73,7 +92,9 @@ def generate_launch_description():
         rviz_node,
         robot_description_rviz_node,
         joint_state_publisher_rviz_node,
-        odometry_pub_node,
+        bwt901cl_pkg_node,
+        odrive_ros2_control_node,
+        odometry_pub_node ,
         path_publisher_node,
         pure_pursuit_planner_node,
     ]

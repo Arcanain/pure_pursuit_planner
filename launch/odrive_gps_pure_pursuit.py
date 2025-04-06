@@ -6,10 +6,13 @@ from launch.substitutions import PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
+from launch.actions import ExecuteProcess
+
 
 def generate_launch_description():
     package_name = 'pure_pursuit_planner'
     simulator_package = 'arcanain_simulator'
+    odrive_package = 'odrive_ros2_control'
     rviz_file_name = "pure_pursuit_planner.rviz"
 
     file_path = os.path.expanduser('~/ros2_ws/src/arcanain_simulator/urdf/mobile_robot.urdf.xml')
@@ -47,7 +50,19 @@ def generate_launch_description():
 
     odometry_pub_node = Node(
         package=simulator_package,
-        executable='odometry_pub',
+        executable='odrive_gps_odom_pub',
+        output="screen",
+    )
+
+    obstacle_pub_node = Node(
+        package=simulator_package,
+        executable='obstacle_pub',
+        output="screen",
+    )
+
+    odrive_ros2_control_node = Node(
+        package=odrive_package,
+        executable='control_odrive_and_odom_pub',
         output="screen",
     )
 
@@ -69,11 +84,30 @@ def generate_launch_description():
         output="screen",
     )
 
+    gnss_node = Node(
+        package='gnss_preprocessing',
+        executable='gnss_preprocessing',
+        output='screen'
+    )
+
+    ros_bag_node = ExecuteProcess(
+        cmd=[
+            'ros2', 'bag', 'play', 
+            os.path.expanduser('~/rosbag2_1729919458'),
+            '--rate','2.0',
+            '--remap', '/ublox/fix:=/ublox_gps_node/fix'
+        ],
+        output='screen'
+    )
+
     nodes = [
+        ros_bag_node,
         rviz_node,
         robot_description_rviz_node,
         joint_state_publisher_rviz_node,
-        odometry_pub_node,
+        gnss_node,
+        odrive_ros2_control_node,
+        odometry_pub_node ,
         path_publisher_node,
         pure_pursuit_planner_node,
     ]
