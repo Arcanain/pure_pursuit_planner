@@ -44,6 +44,18 @@ public:
 
     bool isGoalReached() const;
 
+    double calcLf(double k, double current_velocity, double Lfc) const;
+
+    bool odom_sub_flag = false;
+
+    int oldNearestPointIndex = -1;
+
+    int calcOldNearestPointIndex() const;
+
+    int calcFirstNearestPointIndex() const;
+
+    std::pair<double, double> isGoalReached(double v, double w) const;
+
 private:
     double calcDistance(double x1, double y1, double x2, double y2) const;
     std::pair<int, double> searchTargetIndex();

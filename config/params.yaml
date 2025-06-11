@@ -7,7 +7,7 @@ pure_pursuit_node:
     goal_threshold: 0.4
     max_acceleration: 0.08
     minCurvature: 0.0
-    maxCurvature: 3.0
+    maxCurvature: 5.0
     minVelocity: 0.4
     maxVelocity: 0.7
     maxAngularVelocity: 1.3
