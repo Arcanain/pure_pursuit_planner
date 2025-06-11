@@ -6,11 +6,18 @@ from launch.substitutions import PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
+from ament_index_python.packages import get_package_share_directory
+
 
 def generate_launch_description():
     package_name = 'pure_pursuit_planner'
     simulator_package = 'arcanain_simulator'
     rviz_file_name = "pure_pursuit_planner.rviz"
+    config_path = os.path.join(
+        get_package_share_directory('pure_pursuit_planner'),
+        'config',
+        'params.yaml'
+    )
 
     file_path = os.path.expanduser('~/ros2_ws/src/arcanain_simulator/urdf/mobile_robot.urdf.xml')
 
@@ -67,6 +74,7 @@ def generate_launch_description():
         package=package_name,
         executable='pure_pursuit_planner',
         output="screen",
+        parameters=[config_path]
     )
 
     nodes = [
