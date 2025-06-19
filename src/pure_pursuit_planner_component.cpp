@@ -30,12 +30,6 @@ void PurePursuitComponent::setPose(const Pose2D& pose, double velocity) {
     current_velocity_ = velocity;
 }
 
-void PurePursuitComponent::setObstacle(double x, double y, bool detected) {
-    obstacle_x_ = x;
-    obstacle_y_ = y;
-    obstacle_detected_ = detected;
-}
-
 std::pair<double, double> PurePursuitComponent::computeVelocity() {
     std::cout << "odom_sub_flag: " << odom_sub_flag << std::endl;
     auto [ind, Lf] = searchTargetIndex();
