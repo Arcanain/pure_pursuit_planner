@@ -38,9 +38,14 @@ public:
 
     void setPose(const Pose2D& pose, double velocity);
 
-    void setObstacle(double x, double y, bool detected);
-
-    std::pair<double, double> computeVelocity();
+    std::pair<double, double> computeVelocity(
+        const std::vector<double>& cx,
+        const std::vector<double>& cy,
+        const std::vector<double>& cyaw,
+        const std::vector<double>& ck,
+        const Pose2D& pose, 
+        double velocity
+    );
 
     bool isGoalReached() const;
 
