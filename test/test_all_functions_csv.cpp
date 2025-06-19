@@ -38,14 +38,14 @@ TEST(computeVelocity, CsvBasedTest) {
                 config.k = r.at("k");
 
                 PurePursuitComponent pp(config);
-                pp.setPath(cx, cy, cyaw, ck);
+                //pp.setPath(cx, cy, cyaw, ck);
 
                 Pose2D pose{r.at("pose_x"), r.at("pose_y"), r.at("pose_yaw")};
-                pp.setPose(pose, r.at("velocity"));
+                //pp.setPose(pose, r.at("velocity"));
 
                 //auto [v, w] = pp.computeVelocity();
                 //return {v, w};
-                auto [v, w] = pp.computeVelocity();
+                auto [v, w] = pp.computeVelocity(cx, cy, cyaw, ck, pose, r.at("velocity"));
                 return std::vector<double>{v, w};
                 
             }
