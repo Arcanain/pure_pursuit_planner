@@ -8,6 +8,7 @@ using test_utils::runCsvTests;
 
 const double tol = 1e-3;
 
+//pp-00 現在地と目標経路を入力に対して、目標経路を追従するような速度、加速度を出力
 TEST(computeVelocity, CsvBasedTest) {
     std::vector<FuncTest> tests = {
         FuncTest{
@@ -55,6 +56,7 @@ TEST(computeVelocity, CsvBasedTest) {
     runCsvTests(tests, tol);
 }
 
+//pp-03 ロボットの現在速度 v に比例した前方注視距離 Lf を求める
 TEST(calcLf, CsvBasedTest) {
     std::vector<FuncTest> tests = {
         FuncTest{
@@ -75,6 +77,7 @@ TEST(calcLf, CsvBasedTest) {
     runCsvTests(tests, tol);
 }
 
+//pp-04 初回実行時、ロボットの現在位置に最も近い軌道上の点（最近傍点）を探索し、oldNearestPointIndex に保存
 TEST(calcFirstNearestPointIndex, CsvBasedTest) {
     std::vector<FuncTest> tests = {
         FuncTest{
@@ -107,6 +110,7 @@ TEST(calcFirstNearestPointIndex, CsvBasedTest) {
     runCsvTests(tests, tol);  // index比較なので誤差なしでOK
 }
 
+//pp-05 前回の注視点を元に探索範囲を限定する
 TEST(calcOldNearestPointIndex, CsvBasedTest) {
     std::vector<FuncTest> tests = {
         FuncTest{
@@ -146,3 +150,42 @@ TEST(calcOldNearestPointIndex, CsvBasedTest) {
 
     runCsvTests(tests, 0.0);  // index比較なので誤差なしでOK
 }
+
+//pp-06 現在位置から前方注視距離 Lf 以上の注視点を探す.
+TEST(searchTargetIndex, CsvBasedTest) {
+    std::vector<FuncTest> tests = {
+        FuncTest{
+            "searchTargetIndex",
+            {
+                "pose_x", "pose_y", "velocity",
+                "k", "Lfc",
+                "cx0", "cy0", "cx1", "cy1", "cx2", "cy2", "cx3", "cy3"
+            },
+            {"expected_index"},
+            [](const auto &r){
+                // パス設定
+                std::vector<double> cx = {r.at("cx0"), r.at("cx1"), r.at("cx2"), r.at("cx3")};
+                std::vector<double> cy = {r.at("cy0"), r.at("cy1"), r.at("cy2"), r.at("cy3")};
+
+                // コンフィグ
+                PurePursuitConfig config;
+                config.k = r.at("k");
+                config.Lfc = r.at("Lfc");
+
+                // インスタンス作成
+                PurePursuitComponent pp(config);
+                pp.setPath(cx, cy, {}, {});
+                pp.setPose(Pose2D{r.at("pose_x"), r.at("pose_y"), 0.0}, r.at("velocity"));
+
+                // テスト対象呼び出し
+                auto [index, Lf] = pp.searchTargetIndex();
+
+                return std::vector<double>{static_cast<double>(index)};
+            }
+        }
+    };
+
+    runCsvTests(tests, 0.0);  // index比較のため誤差なし
+}
+
+

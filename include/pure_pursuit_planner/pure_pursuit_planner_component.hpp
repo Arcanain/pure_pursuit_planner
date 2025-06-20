@@ -61,9 +61,10 @@ public:
 
     std::pair<double, double> isGoalReached(double v, double w) const;
 
+    std::pair<int, double> searchTargetIndex();
+
 private:
     double calcDistance(double x1, double y1, double x2, double y2) const;
-    std::pair<int, double> searchTargetIndex();
     std::pair<double, std::pair<double, double>> calcClosestPointOnPath();
     std::pair<double, double> calcAcceleration(double current_vel);
 
