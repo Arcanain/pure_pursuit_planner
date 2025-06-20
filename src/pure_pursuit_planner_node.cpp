@@ -12,6 +12,7 @@ namespace pure_pursuit_planner {
 
 PurePursuitNode::PurePursuitNode(const rclcpp::NodeOptions& options)
 : Node("pure_pursuit_node", options), planner_(config_) {
+
     declareAndGetParameters();
 
     path_sub_ = create_subscription<nav_msgs::msg::Path>(
@@ -25,6 +26,7 @@ PurePursuitNode::PurePursuitNode(const rclcpp::NodeOptions& options)
     timer_ = create_wall_timer(
         std::chrono::milliseconds(100), std::bind(&PurePursuitNode::timerCallback, this));
     planner_ = PurePursuitComponent(config_);  // 値が入ったconfig_で再初期化
+    
 }
 
 void PurePursuitNode::declareAndGetParameters() {

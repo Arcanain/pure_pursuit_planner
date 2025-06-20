@@ -168,6 +168,7 @@ std::pair<int, double> PurePursuitComponent::searchTargetIndex() {
             }
             ind++;
         }
+        std::cout << "ind, Lf: " << ind << ", " << Lf << std::endl;
         return { ind, Lf };
     }else{
         std::cout << "[WARN] searchTargetIndex() called before path was set." << std::endl;
