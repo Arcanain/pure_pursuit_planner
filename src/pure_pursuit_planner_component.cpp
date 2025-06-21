@@ -63,7 +63,9 @@ std::pair<double, double> PurePursuitComponent::computeVelocity(
     std::cout << "curvature: " << std::abs(curvature) << std::endl;
     curvature = curvature / cfg_.maxCurvature;
 
-    double v = (cfg_.maxCurvature- cfg_.minCurvature) * pow(sin(acos(std::cbrt(curvature))), 3) + cfg_.minVelocity; //[m/s]
+    //double v = (cfg_.maxVelocity- cfg_.minVelocity) * pow(sin(acos(std::cbrt(curvature))), 3) + cfg_.minVelocity; //[m/s]
+    double v = curvatureToVelocity(curvature);
+
     v = std::clamp(v, cfg_.minVelocity, cfg_.maxVelocity);
     std::cout << "v: " << v << std::endl;
 
@@ -74,6 +76,10 @@ std::pair<double, double> PurePursuitComponent::computeVelocity(
 
 
     return {v, w};
+}
+
+double PurePursuitComponent::curvatureToVelocity(double curvature) const {
+    return (cfg_.maxVelocity- cfg_.minVelocity) * pow(sin(acos(std::cbrt(curvature))), 3) + cfg_.minVelocity;
 }
 
 std::pair<double, double> PurePursuitComponent::isGoalReached(double v, double w) const {
@@ -90,6 +96,7 @@ std::pair<double, double> PurePursuitComponent::isGoalReached(double v, double w
 double PurePursuitComponent::calcLf(double k, double current_velocity, double Lfc) const {
     return k * current_velocity + Lfc;
 }
+
 int PurePursuitComponent::calcFirstNearestPointIndex() const {
     double min_distance = std::numeric_limits<double>::max();
     int min_index = -1;
