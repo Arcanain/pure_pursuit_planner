@@ -188,4 +188,26 @@ TEST(searchTargetIndex, CsvBasedTest) {
     runCsvTests(tests, 0.0);  // index比較のため誤差なし
 }
 
+//pp-07 曲率が大きいほど減速し、直線時（曲率 ≒ 0）には最大速度に近づくような目標速度を求める。
+TEST(curvatureToVelocity, CsvBasedTest) {
+    std::vector<FuncTest> tests = {
+        FuncTest{
+            "curvatureToVelocity",
+            {"curvature", "minVelocity", "maxVelocity"},
+            {"expected_velocity"},
+            [](const auto &r){
+                PurePursuitConfig config;
+                config.minVelocity = r.at("minVelocity");
+                config.maxVelocity = r.at("maxVelocity");
+
+                PurePursuitComponent pp(config);
+                double velocity = pp.curvatureToVelocity(r.at("curvature"));
+
+                return std::vector<double>{velocity};
+            }
+        }
+    };
+
+    runCsvTests(tests, tol);
+}
 

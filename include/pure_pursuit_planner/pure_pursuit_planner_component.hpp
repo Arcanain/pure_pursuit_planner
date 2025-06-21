@@ -63,6 +63,8 @@ public:
 
     std::pair<int, double> searchTargetIndex();
 
+    double curvatureToVelocity(double curvature) const;
+
 private:
     double calcDistance(double x1, double y1, double x2, double y2) const;
     std::pair<double, std::pair<double, double>> calcClosestPointOnPath();
