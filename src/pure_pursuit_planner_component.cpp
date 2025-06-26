@@ -18,7 +18,7 @@ void PurePursuitComponent::setPath(const std::vector<double>& cx,
     cy_ = cy;
     cyaw_ = cyaw;
     ck_ = ck;
-    std::cout << "odom_sub_flag: " << odom_sub_flag << std::endl;
+    //std::cout << "odom_sub_flag: " << odom_sub_flag << std::endl;
     if (!odom_sub_flag){
         odom_sub_flag = true;
         oldNearestPointIndex = -1;
@@ -41,35 +41,38 @@ std::pair<double, double> PurePursuitComponent::computeVelocity(
     {
     setPath(cx, cy, cyaw, ck);
     setPose(pose, velocity);
-    std::cout << "odom_sub_flag: " << odom_sub_flag << std::endl;
+    //std::cout << "odom_sub_flag: " << odom_sub_flag << std::endl;
     auto [ind, Lf] = searchTargetIndex();
-    std::cout << "ind: " << ind << std::endl;
-    std::cout << "Lf: " << Lf << std::endl;
-    std::cout << "cx: " << cx_.size() << std::endl;
+    //std::cout << "ind: " << ind << std::endl;
+    //std::cout << "Lf: " << Lf << std::endl;
+    //std::cout << "cx: " << cx_.size() << std::endl;
 
     targetIndex_ = ind;
 
     double tx = cx_[targetIndex_];
     double ty = cy_[targetIndex_];
-    double target_yaw = cyaw_[targetIndex_];
+    //double target_yaw = cyaw_[targetIndex_];
     double target_curvature = ck_[targetIndex_];
-    std::cout << "target_curvature: " << std::abs(target_curvature) << std::endl;
+    //std::cout << "target_curvature: " << std::abs(target_curvature) << std::endl;
     double dx = tx - current_pose_.x;
     double dy = ty - current_pose_.y;
 
     double alpha = std::atan2(dy, dx) - current_pose_.yaw;
 
+    alpha = alphaExceptionHandling(alpha);
+
     double curvature = std::max(cfg_.minCurvature, std::min(std::abs(target_curvature), cfg_.maxCurvature));
-    std::cout << "curvature: " << std::abs(curvature) << std::endl;
+    //std::cout << "curvature: " << std::abs(curvature) << std::endl;
     curvature = curvature / cfg_.maxCurvature;
 
     //double v = (cfg_.maxVelocity- cfg_.minVelocity) * pow(sin(acos(std::cbrt(curvature))), 3) + cfg_.minVelocity; //[m/s]
     double v = curvatureToVelocity(curvature);
 
     v = std::clamp(v, cfg_.minVelocity, cfg_.maxVelocity);
-    std::cout << "v: " << v << std::endl;
+    //std::cout << "v: " << v << std::endl;
 
-    double w = v * std::sin(alpha) / Lf;
+    //double w = v * std::sin(alpha) / Lf;
+    double w = calculateAngularVelocity(v, alpha, Lf);
     //w = std::clamp(w, -cfg_.maxAngularVelocity, cfg_.maxAngularVelocity);
 
     std::tie(v, w) = isGoalReached(v, w);
@@ -77,6 +80,28 @@ std::pair<double, double> PurePursuitComponent::computeVelocity(
 
     return {v, w};
 }
+
+double PurePursuitComponent::alphaExceptionHandling(double tempAlpha) const {
+    // 角度を -π〜π の範囲に正規化
+    tempAlpha = std::fmod(tempAlpha + M_PI, 2 * M_PI);
+    if (tempAlpha < 0)
+        tempAlpha += 2 * M_PI;
+    tempAlpha -= M_PI;
+
+    // π ± ε のときだけ補正
+    constexpr double eps = 0.1;
+    if (std::abs(tempAlpha - M_PI) < eps || std::abs(tempAlpha + M_PI) < eps) {
+        tempAlpha += 0.15;
+    }
+
+    return tempAlpha;
+}
+
+
+double PurePursuitComponent::calculateAngularVelocity(double v, double alpha, double Lf) const {
+    return v * std::sin(alpha) / Lf;
+}
+
 
 double PurePursuitComponent::curvatureToVelocity(double curvature) const {
     return (cfg_.maxVelocity- cfg_.minVelocity) * pow(sin(acos(std::cbrt(curvature))), 3) + cfg_.minVelocity;
@@ -132,7 +157,6 @@ int PurePursuitComponent::calcOldNearestPointIndex() const {
         if (distanceThisIndex < min_distance) {
             min_distance = distanceThisIndex;
             //min_index = i;
-            //RCLCPP_INFO(this->get_logger(), "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
             //RCLCPP_INFO(this->get_logger(), "Received path point: (%d)", min_index);
             // 配列に保存
             min_distance_list.push_back(min_distance);
@@ -175,10 +199,11 @@ std::pair<int, double> PurePursuitComponent::searchTargetIndex() {
             }
             ind++;
         }
-        std::cout << "ind, Lf: " << ind << ", " << Lf << std::endl;
+        //std::cout << "ind, Lf: " << ind << ", " << Lf << std::endl;
         return { ind, Lf };
     }else{
         std::cout << "[WARN] searchTargetIndex() called before path was set." << std::endl;
+        return {0, 0.0};
     }
 }
 

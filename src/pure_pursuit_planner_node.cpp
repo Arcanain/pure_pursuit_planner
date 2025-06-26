@@ -61,7 +61,7 @@ void PurePursuitNode::pathCallback(const nav_msgs::msg::Path::SharedPtr msg) {
             mat.getRPY(roll_rev, pitch_rev, yaw_rev);
             cyaw_.push_back(yaw_rev);
 
-            RCLCPP_INFO(this->get_logger(), "Received path point: (%f, %f)", pose.pose.position.x, pose.pose.position.y);
+            //RCLCPP_INFO(this->get_logger(), "Received path point: (%f, %f)", pose.pose.position.x, pose.pose.position.y);
         }
         
         path_received_ = true;
@@ -87,7 +87,7 @@ void PurePursuitNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
 }
 
 void PurePursuitNode::timerCallback() {
-    RCLCPP_INFO(this->get_logger(), "Timer triggered. path_received_: %d, pose_received_: %d", path_received_, pose_received_);
+    //RCLCPP_INFO(this->get_logger(), "Timer triggered. path_received_: %d, pose_received_: %d", path_received_, pose_received_);
 
     if (!path_received_ || !pose_received_) return;
 

@@ -211,3 +211,72 @@ TEST(curvatureToVelocity, CsvBasedTest) {
     runCsvTests(tests, tol);
 }
 
+// pp-09 角度αが ±π 付近のときに補正（+0.15）が入ることを確認する
+TEST(alphaExceptionHandling, CsvBasedTest) {
+    std::vector<FuncTest> tests = {
+        FuncTest{
+            "alphaExceptionHandling",
+            {"input_alpha"},
+            {"expected_alpha"},
+            [](const auto &r){
+                PurePursuitConfig config;
+                PurePursuitComponent pp(config);
+                double corrected_alpha = pp.alphaExceptionHandling(r.at("input_alpha"));
+                return std::vector<double>{corrected_alpha};
+            }
+        }
+    };
+
+    runCsvTests(tests, tol); 
+}
+
+// pp-10 線形速度v、偏差角度alpha、前方注視距離Lfから角速度を計算
+TEST(calculateAngularVelocity, CsvBasedTest) {
+    std::vector<FuncTest> tests = {
+        FuncTest{
+            "calculateAngularVelocity",
+            {"v", "alpha", "Lf"},
+            {"expected_angular_velocity"},
+            [](const auto &r){
+                PurePursuitConfig config;
+                PurePursuitComponent pp(config);
+                double w = pp.calculateAngularVelocity(r.at("v"), r.at("alpha"), r.at("Lf"));
+                return std::vector<double>{w};
+            }
+        }
+    };
+
+    runCsvTests(tests, tol);  // sinが含まれるので誤差許容必要
+}
+
+// pp-13 ゴールに到達したとき、v, w をゼロにする
+TEST(isGoalReached, CsvBasedTest) {
+    std::vector<FuncTest> tests = {
+        FuncTest{
+            "isGoalReached",
+            {
+                "pose_x", "pose_y",
+                "cx0", "cy0", "cx1", "cy1",
+                "v", "w"
+            },
+            {"expected_v", "expected_w"},
+            [](const auto &r){
+                // 経路設定
+                std::vector<double> cx = {r.at("cx0"), r.at("cx1")};
+                std::vector<double> cy = {r.at("cy0"), r.at("cy1")};
+
+                PurePursuitConfig config;
+                PurePursuitComponent pp(config);
+                pp.setPath(cx, cy, {}, {});
+                pp.setPose(Pose2D{r.at("pose_x"), r.at("pose_y"), 0.0}, 0.0);
+
+                auto [v, w] = pp.isGoalReached(r.at("v"), r.at("w"));
+                return std::vector<double>{v, w};
+            }
+        }
+    };
+
+    runCsvTests(tests, tol);
+}
+
+
