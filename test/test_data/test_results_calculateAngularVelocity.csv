@@ -1,0 +1,7 @@
+expected_angular_velocity,act_expected_angular_velocity,OK
+0,0,OK
+0.5,0.5,OK
+1,1,OK
+0.707107,0.707107,OK
+-1,-1,OK
+0,-1.02068e-11,OK

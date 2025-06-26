@@ -65,6 +65,10 @@ public:
 
     double curvatureToVelocity(double curvature) const;
 
+    double alphaExceptionHandling(double tempAlpha) const;
+
+    double calculateAngularVelocity(double v, double alpha, double Lf) const;
+
 private:
     double calcDistance(double x1, double y1, double x2, double y2) const;
     std::pair<double, std::pair<double, double>> calcClosestPointOnPath();
