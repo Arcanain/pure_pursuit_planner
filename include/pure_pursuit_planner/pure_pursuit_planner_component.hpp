@@ -38,7 +38,7 @@ public:
 
     void setPose(const Pose2D& pose, double velocity);
 
-    std::pair<double, double> computeVelocity(
+    std::vector<double> computeVelocity(
         const std::vector<double>& cx,
         const std::vector<double>& cy,
         const std::vector<double>& cyaw,

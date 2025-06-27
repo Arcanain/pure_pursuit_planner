@@ -30,7 +30,7 @@ void PurePursuitComponent::setPose(const Pose2D& pose, double velocity) {
     current_velocity_ = velocity;
 }
 
-std::pair<double, double> PurePursuitComponent::computeVelocity(
+std::vector<double> PurePursuitComponent::computeVelocity(
     const std::vector<double>& cx,
     const std::vector<double>& cy,
     const std::vector<double>& cyaw,
@@ -77,8 +77,10 @@ std::pair<double, double> PurePursuitComponent::computeVelocity(
 
     std::tie(v, w) = isGoalReached(v, w);
 
+    std::vector<double> cmd_velocity{v, w};
 
-    return {v, w};
+
+    return cmd_velocity;
 }
 
 double PurePursuitComponent::alphaExceptionHandling(double tempAlpha) const {

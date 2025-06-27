@@ -46,8 +46,8 @@ TEST(computeVelocity, CsvBasedTest) {
 
                 //auto [v, w] = pp.computeVelocity();
                 //return {v, w};
-                auto [v, w] = pp.computeVelocity(cx, cy, cyaw, ck, pose, r.at("velocity"));
-                return std::vector<double>{v, w};
+                auto cmdVelocity = pp.computeVelocity(cx, cy, cyaw, ck, pose, r.at("velocity"));
+                return std::vector<double>{cmdVelocity[0], cmdVelocity[1]};
                 
             }
         }
