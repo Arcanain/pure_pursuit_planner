@@ -91,11 +91,11 @@ void PurePursuitNode::timerCallback() {
 
     if (!path_received_ || !pose_received_) return;
 
-    auto [v, w] = planner_.computeVelocity(cx_, cy_, cyaw_, ck_, current_pose_, current_vx_);
+    auto cmd_velocity = planner_.computeVelocity(cx_, cy_, cyaw_, ck_, current_pose_, current_vx_);
 
     geometry_msgs::msg::Twist cmd_vel;
-    cmd_vel.linear.x = v;
-    cmd_vel.angular.z = w;
+    cmd_vel.linear.x = cmd_velocity[0];
+    cmd_vel.angular.z = cmd_velocity[1];
 
     cmd_vel_pub_->publish(cmd_vel);
 }
