@@ -30,7 +30,7 @@ This software implements a ROS 2 node for path following control of robots or au
 ```bash
 cd ~/ros2_ws
 source ~/ros2_ws/install/setup.bash
-ros2 launch pure_pursuit_planner pure_pursuit_planner.py
+ros2 launch pure_pursuit_planner obstacle_simulation.py
 ```
 
 ### Folder Structure
