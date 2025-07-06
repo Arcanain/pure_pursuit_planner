@@ -6,18 +6,11 @@ from launch.substitutions import PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
-from ament_index_python.packages import get_package_share_directory
-
 
 def generate_launch_description():
     package_name = 'pure_pursuit_planner'
     simulator_package = 'arcanain_simulator'
     rviz_file_name = "pure_pursuit_planner.rviz"
-    config_path = os.path.join(
-        get_package_share_directory('pure_pursuit_planner'),
-        'config',
-        'params.yaml'
-    )
 
     file_path = os.path.expanduser('~/ros2_ws/src/arcanain_simulator/urdf/mobile_robot.urdf.xml')
 
@@ -26,6 +19,13 @@ def generate_launch_description():
 
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare(package_name), "rviz", rviz_file_name]
+    )
+
+    dummy_node = Node(
+    package='tf2_ros',
+    executable='static_transform_publisher',
+    output='screen',
+    arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'map', 'dummy_link']
     )
 
     rviz_node = Node(
@@ -58,9 +58,15 @@ def generate_launch_description():
         output="screen",
     )
 
+    obstacle_pub_node = Node(
+        package=simulator_package,
+        executable='obstacle_pub',
+        output="screen",
+    )
+
     path_publisher_node = Node(
         package='path_smoother',
-        executable='path_publisher',
+        executable='path_publisher_gps_04',
         output="screen",
     )
     
@@ -74,11 +80,11 @@ def generate_launch_description():
         package=package_name,
         executable='pure_pursuit_planner',
         output="screen",
-        parameters=[config_path]
     )
 
     nodes = [
         rviz_node,
+        dummy_node,
         robot_description_rviz_node,
         joint_state_publisher_rviz_node,
         odometry_pub_node,

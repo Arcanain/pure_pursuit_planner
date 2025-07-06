@@ -1,0 +1,6 @@
+expected_v,act_expected_v,expected_w,act_expected_w,OK
+0,0,0,0,OK
+0.5,0.5,0.1,0.1,OK
+0,0,0,0,OK
+0.4,0.4,-0.2,-0.2,OK
+0,0,0,0,OK

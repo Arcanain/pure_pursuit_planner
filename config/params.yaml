@@ -1,0 +1,14 @@
+pure_pursuit_node:
+  ros__parameters:
+    k: 0.5
+    Lfc: 0.8
+    Kp: 1.0
+    dt: 0.1
+    goal_threshold: 0.4
+    max_acceleration: 0.08
+    minCurvature: 0.0
+    maxCurvature: 5.0
+    minVelocity: 0.4
+    maxVelocity: 0.7
+    maxAngularVelocity: 1.3
+    obstacle_th: 0.5
