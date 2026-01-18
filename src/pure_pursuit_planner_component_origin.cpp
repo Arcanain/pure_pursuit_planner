@@ -11,7 +11,7 @@ PurePursuitNode::PurePursuitNode()
     oldNearestPointIndex = -1;
 
     // Publisher
-    cmd_vel_pub = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 50);
+    cmd_vel_pub = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel_temp", 50);
     look_ahead_range_pub = this->create_publisher<visualization_msgs::msg::Marker>(
       "look_ahead_range_marker",
       10);

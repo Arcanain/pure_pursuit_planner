@@ -114,7 +114,7 @@ def generate_launch_description():
         executable='pure_pursuit_planner',
         output="screen",
         remappings=[
-            ('goal_status', 'goal_status2'),
+            ('goal_status', 'emcl_gnss_1'),
         ],
     )
     gnss_node = Node(
@@ -151,7 +151,6 @@ def generate_launch_description():
 
     nodes = [
         lidar_launch,
-        imu_node,
         perception_obstacle_node,
         robot_description_rviz_node,
         joint_state_publisher_rviz_node,
