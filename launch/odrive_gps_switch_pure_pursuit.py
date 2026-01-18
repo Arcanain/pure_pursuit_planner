@@ -91,7 +91,7 @@ def generate_launch_description():
 
     odrive_ros2_control_node = Node(
         package=odrive_package,
-        executable='control_odrive_use_imu_pi',
+        executable='control_odrive_and_odom_pub_gps',
         output="screen",
     )
 
@@ -145,7 +145,6 @@ def generate_launch_description():
 
     nodes = [
         dummy_node,
-        imu_node,
         rviz_node,
         lidar_launch,
         perception_obstacle_node,
