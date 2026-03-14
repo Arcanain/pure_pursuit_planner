@@ -9,6 +9,6 @@ pure_pursuit_node:
     minCurvature: 0.0
     maxCurvature: 5.0
     minVelocity: 0.4
-    maxVelocity: 0.7
+    maxVelocity: 3.0
     maxAngularVelocity: 1.3
     obstacle_th: 0.5
