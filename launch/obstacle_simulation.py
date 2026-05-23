@@ -90,6 +90,7 @@ def generate_launch_description():
         odometry_pub_node,
         path_publisher_node,
         pure_pursuit_planner_node,
+        obstacle_pub_node,
     ]
 
     return LaunchDescription(nodes)
