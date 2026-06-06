@@ -1,6 +1,6 @@
 // Directory: pure_pursuit_planner/src/pure_pursuit_node.cpp
 #include "pure_pursuit_planner/pure_pursuit_planner_node.hpp"
-#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp> 
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include "tf2/LinearMath/Quaternion.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 #include "tf2_ros/static_transform_broadcaster.h"
@@ -11,22 +11,12 @@
 namespace pure_pursuit_planner {
 
 PurePursuitNode::PurePursuitNode(const rclcpp::NodeOptions& options)
-: Node("pure_pursuit_node", options), planner_(config_) {
+: rclcpp_lifecycle::LifecycleNode("pure_pursuit_node", options), planner_(config_) {
 
+    // パラメータはコンストラクタで宣言し、planner_ を確定した config_ で初期化する。
+    // I/O（sub/pub/timer）の生成は on_configure 以降で行う。
     declareAndGetParameters();
-
-    path_sub_ = create_subscription<nav_msgs::msg::Path>(
-        "tgt_path", 10, std::bind(&PurePursuitNode::pathCallback, this, std::placeholders::_1));
-
-    odom_sub_ = create_subscription<nav_msgs::msg::Odometry>(
-        "odom", 10, std::bind(&PurePursuitNode::odomCallback, this, std::placeholders::_1));
-
-    cmd_vel_pub_ = create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
-
-    timer_ = create_wall_timer(
-        std::chrono::milliseconds(100), std::bind(&PurePursuitNode::timerCallback, this));
     planner_ = PurePursuitComponent(config_);  // 値が入ったconfig_で再初期化
-    
 }
 
 void PurePursuitNode::declareAndGetParameters() {
@@ -44,9 +34,100 @@ void PurePursuitNode::declareAndGetParameters() {
     config_.obstacle_th = this->declare_parameter("obstacle_th", 0.5);
 }
 
+// =====================================================================
+// Lifecycle transitions
+// =====================================================================
+
+CallbackReturn PurePursuitNode::on_configure(const rclcpp_lifecycle::State& /*state*/) {
+    RCLCPP_INFO(get_logger(), "on_configure: setting up subscriptions / publisher / timer");
+
+    // 受信系（状態更新）は configure で生成し、Active/Inactive を通じて生かしておく
+    path_sub_ = create_subscription<nav_msgs::msg::Path>(
+        "tgt_path", 10, std::bind(&PurePursuitNode::pathCallback, this, std::placeholders::_1));
+
+    odom_sub_ = create_subscription<nav_msgs::msg::Odometry>(
+        "odom", 10, std::bind(&PurePursuitNode::odomCallback, this, std::placeholders::_1));
+
+    // LifecyclePublisher: Inactive 時は publish が自動的に破棄される（多重安全）
+    cmd_vel_pub_ = create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
+
+    // 能動駆動のタイマーは生成するが、activate されるまでは止めておく
+    timer_ = create_wall_timer(
+        std::chrono::milliseconds(100), std::bind(&PurePursuitNode::timerCallback, this));
+    timer_->cancel();
+
+    return CallbackReturn::SUCCESS;
+}
+
+CallbackReturn PurePursuitNode::on_activate(const rclcpp_lifecycle::State& /*state*/) {
+    RCLCPP_INFO(get_logger(), "on_activate: re-acquire nearest point and start control loop");
+
+    // ② 再開時は追従進捗をリセットし、現在位置から最近傍点を取り直す
+    planner_.oldNearestPointIndex = -1;
+
+    cmd_vel_pub_->on_activate();
+    timer_->reset();  // 能動駆動（computeVelocity + publish）を開始
+
+    return CallbackReturn::SUCCESS;
+}
+
+CallbackReturn PurePursuitNode::on_deactivate(const rclcpp_lifecycle::State& /*state*/) {
+    RCLCPP_INFO(get_logger(), "on_deactivate: stop control loop and command zero velocity");
+
+    // まず能動駆動を止める（ステートフルな computeVelocity も一緒に止まる）
+    timer_->cancel();
+
+    // ① publisher がまだ active のうちに明示的な停止指令を 1 回送る
+    publishZeroVelocity();
+
+    cmd_vel_pub_->on_deactivate();
+
+    return CallbackReturn::SUCCESS;
+}
+
+CallbackReturn PurePursuitNode::on_cleanup(const rclcpp_lifecycle::State& /*state*/) {
+    RCLCPP_INFO(get_logger(), "on_cleanup: releasing I/O and resetting state");
+
+    timer_.reset();
+    cmd_vel_pub_.reset();
+    path_sub_.reset();
+    odom_sub_.reset();
+
+    // 再 configure に備えて内部状態を初期化する
+    cx_.clear(); cy_.clear(); cyaw_.clear(); ck_.clear();
+    path_received_ = false;
+    pose_received_ = false;
+    path_subscribe_flag = false;
+    planner_ = PurePursuitComponent(config_);
+
+    return CallbackReturn::SUCCESS;
+}
+
+CallbackReturn PurePursuitNode::on_shutdown(const rclcpp_lifecycle::State& /*state*/) {
+    RCLCPP_INFO(get_logger(), "on_shutdown");
+
+    if (timer_) {
+        timer_->cancel();
+    }
+    // Active から直接 shutdown された場合に備え、停止指令を送ってから解放する
+    if (cmd_vel_pub_ && cmd_vel_pub_->is_activated()) {
+        publishZeroVelocity();
+        cmd_vel_pub_->on_deactivate();
+    }
+
+    timer_.reset();
+    cmd_vel_pub_.reset();
+    path_sub_.reset();
+    odom_sub_.reset();
+
+    return CallbackReturn::SUCCESS;
+}
+
+// =====================================================================
+// I/O callbacks
+// =====================================================================
+
 void PurePursuitNode::pathCallback(const nav_msgs::msg::Path::SharedPtr msg) {
-    //RCLCPP_INFO(this->get_logger(), "start Received path point");
-    //cx_.clear(); cy_.clear(); cyaw_.clear(); ck_.clear();
     if (!path_subscribe_flag) {
         // 受け取ったパスメッセージから座標を抽出
         for (const auto& pose : msg->poses) {
@@ -60,10 +141,8 @@ void PurePursuitNode::pathCallback(const nav_msgs::msg::Path::SharedPtr msg) {
             double roll_rev, pitch_rev, yaw_rev;
             mat.getRPY(roll_rev, pitch_rev, yaw_rev);
             cyaw_.push_back(yaw_rev);
-
-            //RCLCPP_INFO(this->get_logger(), "Received path point: (%f, %f)", pose.pose.position.x, pose.pose.position.y);
         }
-        
+
         path_received_ = true;
         path_subscribe_flag = true;
     }
@@ -72,7 +151,6 @@ void PurePursuitNode::pathCallback(const nav_msgs::msg::Path::SharedPtr msg) {
 void PurePursuitNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg) {
     current_pose_.x = msg->pose.pose.position.x;
     current_pose_.y = msg->pose.pose.position.y;
-    //current_pose_.yaw = tf2::getYaw(msg->pose.pose.orientation);
     current_vx_ = msg->twist.twist.linear.x;
 
     tf2::Quaternion quat;
@@ -87,8 +165,6 @@ void PurePursuitNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
 }
 
 void PurePursuitNode::timerCallback() {
-    //RCLCPP_INFO(this->get_logger(), "Timer triggered. path_received_: %d, pose_received_: %d", path_received_, pose_received_);
-
     if (!path_received_ || !pose_received_) return;
 
     auto cmd_velocity = planner_.computeVelocity(cx_, cy_, cyaw_, ck_, current_pose_, current_vx_);
@@ -98,6 +174,13 @@ void PurePursuitNode::timerCallback() {
     cmd_vel.angular.z = cmd_velocity[1];
 
     cmd_vel_pub_->publish(cmd_vel);
+}
+
+void PurePursuitNode::publishZeroVelocity() {
+    geometry_msgs::msg::Twist stop;
+    stop.linear.x = 0.0;
+    stop.angular.z = 0.0;
+    cmd_vel_pub_->publish(stop);
 }
 
 }  // namespace pure_pursuit_planner

@@ -11,6 +11,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_gtest REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_lifecycle REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
@@ -27,10 +28,11 @@ add_library(pure_pursuit_planner_library
 )
 add_executable(pure_pursuit_planner src/pure_pursuit_planner.cpp)
 ament_target_dependencies(pure_pursuit_planner_library
-  rclcpp 
-  geometry_msgs 
-  nav_msgs 
-  tf2_geometry_msgs 
+  rclcpp
+  rclcpp_lifecycle
+  geometry_msgs
+  nav_msgs
+  tf2_geometry_msgs
   tf2_ros
   visualization_msgs
 )
@@ -94,7 +96,7 @@ if(BUILD_TESTING)
     )
 
     ament_target_dependencies(test_pp_all_functions
-      rclcpp geometry_msgs nav_msgs tf2_ros tf2_geometry_msgs
+      rclcpp rclcpp_lifecycle geometry_msgs nav_msgs tf2_ros tf2_geometry_msgs
     )
 
     set_tests_properties(test_pp_all_functions PROPERTIES
