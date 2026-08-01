@@ -55,6 +55,8 @@ public:
 
     int oldNearestPointIndex = -1;
 
+    int getTargetIndex() const { return targetIndex_; }
+
     int calcOldNearestPointIndex() const;
 
     int calcFirstNearestPointIndex() const;

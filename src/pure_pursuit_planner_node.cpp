@@ -50,6 +50,7 @@ CallbackReturn PurePursuitNode::on_configure(const rclcpp_lifecycle::State& /*st
 
     // LifecyclePublisher: Inactive 時は publish が自動的に破棄される（多重安全）
     cmd_vel_pub_ = create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
+    lookahead_marker_pub_ = create_publisher<visualization_msgs::msg::Marker>("pp_lookahead_marker", 10);
 
     // 能動駆動のタイマーは生成するが、activate されるまでは止めておく
     timer_ = create_wall_timer(
@@ -66,6 +67,7 @@ CallbackReturn PurePursuitNode::on_activate(const rclcpp_lifecycle::State& /*sta
     planner_.oldNearestPointIndex = -1;
 
     cmd_vel_pub_->on_activate();
+    lookahead_marker_pub_->on_activate();
     timer_->reset();  // 能動駆動（computeVelocity + publish）を開始
 
     return CallbackReturn::SUCCESS;
@@ -81,6 +83,7 @@ CallbackReturn PurePursuitNode::on_deactivate(const rclcpp_lifecycle::State& /*s
     publishZeroVelocity();
 
     cmd_vel_pub_->on_deactivate();
+    lookahead_marker_pub_->on_deactivate();
 
     return CallbackReturn::SUCCESS;
 }
@@ -90,6 +93,7 @@ CallbackReturn PurePursuitNode::on_cleanup(const rclcpp_lifecycle::State& /*stat
 
     timer_.reset();
     cmd_vel_pub_.reset();
+    lookahead_marker_pub_.reset();
     path_sub_.reset();
     odom_sub_.reset();
 
@@ -172,8 +176,26 @@ void PurePursuitNode::timerCallback() {
     geometry_msgs::msg::Twist cmd_vel;
     cmd_vel.linear.x = cmd_velocity[0];
     cmd_vel.angular.z = cmd_velocity[1];
-
     cmd_vel_pub_->publish(cmd_vel);
+
+    // 前方注視点を緑のSphereマーカーで可視化
+    int idx = planner_.getTargetIndex();
+    if (idx >= 0 && idx < static_cast<int>(cx_.size())) {
+        visualization_msgs::msg::Marker marker;
+        marker.header.frame_id = "odom";
+        marker.header.stamp = now();
+        marker.ns = "pp_lookahead";
+        marker.id = 0;
+        marker.type = visualization_msgs::msg::Marker::SPHERE;
+        marker.action = visualization_msgs::msg::Marker::ADD;
+        marker.pose.position.x = cx_[idx];
+        marker.pose.position.y = cy_[idx];
+        marker.pose.position.z = 0.0;
+        marker.pose.orientation.w = 1.0;
+        marker.scale.x = marker.scale.y = marker.scale.z = 0.4;
+        marker.color.r = 0.0; marker.color.g = 1.0; marker.color.b = 0.0; marker.color.a = 1.0;
+        lookahead_marker_pub_->publish(marker);
+    }
 }
 
 void PurePursuitNode::publishZeroVelocity() {

@@ -9,6 +9,7 @@
 #include <nav_msgs/msg/path.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
+#include <visualization_msgs/msg/marker.hpp>
 
 #include "pure_pursuit_planner/pure_pursuit_planner_component.hpp"
 
@@ -41,6 +42,7 @@ private:
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr path_sub_;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
     rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
+    rclcpp_lifecycle::LifecyclePublisher<visualization_msgs::msg::Marker>::SharedPtr lookahead_marker_pub_;
     rclcpp::TimerBase::SharedPtr timer_;
 
     PurePursuitComponent planner_;
