@@ -101,7 +101,6 @@ def generate_launch_description():
     )
 
     nodes = [
-        ros_bag_node,
         rviz_node,
         robot_description_rviz_node,
         joint_state_publisher_rviz_node,

@@ -49,7 +49,7 @@ CallbackReturn PurePursuitNode::on_configure(const rclcpp_lifecycle::State& /*st
         "odom", 10, std::bind(&PurePursuitNode::odomCallback, this, std::placeholders::_1));
 
     // LifecyclePublisher: Inactive 時は publish が自動的に破棄される（多重安全）
-    cmd_vel_pub_ = create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
+    cmd_vel_pub_ = create_publisher<geometry_msgs::msg::Twist>("cmd_vel_tmp", 10);
     lookahead_marker_pub_ = create_publisher<visualization_msgs::msg::Marker>("pp_lookahead_marker", 10);
 
     // 能動駆動のタイマーは生成するが、activate されるまでは止めておく
