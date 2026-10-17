@@ -7,6 +7,7 @@
 #include <nav_msgs/msg/path.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
+#include <std_msgs/msg/bool.hpp>
 
 #include "pure_pursuit_planner/pure_pursuit_planner_component.hpp"
 
@@ -24,6 +25,7 @@ private:
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr path_sub_;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
+    rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr goal_status_pub_;
     rclcpp::TimerBase::SharedPtr timer_;
 
     PurePursuitComponent planner_;

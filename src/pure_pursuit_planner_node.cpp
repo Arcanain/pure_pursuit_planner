@@ -6,6 +6,7 @@
 #include "tf2_ros/static_transform_broadcaster.h"
 #include "tf2_ros/transform_broadcaster.h"
 #include "geometry_msgs/msg/twist.hpp"
+#include <cmath>
 
 
 namespace pure_pursuit_planner {
@@ -21,7 +22,8 @@ PurePursuitNode::PurePursuitNode(const rclcpp::NodeOptions& options)
     odom_sub_ = create_subscription<nav_msgs::msg::Odometry>(
         "odom", 10, std::bind(&PurePursuitNode::odomCallback, this, std::placeholders::_1));
 
-    cmd_vel_pub_ = create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
+    cmd_vel_pub_ = create_publisher<geometry_msgs::msg::Twist>("cmd_vel_tmp", 10);
+    goal_status_pub_ = create_publisher<std_msgs::msg::Bool>("goal_status", 10);
 
     timer_ = create_wall_timer(
         std::chrono::milliseconds(100), std::bind(&PurePursuitNode::timerCallback, this));
@@ -98,6 +100,13 @@ void PurePursuitNode::timerCallback() {
     cmd_vel.angular.z = cmd_velocity[1];
 
     cmd_vel_pub_->publish(cmd_vel);
+
+    double goal_dist = std::hypot(cx_.back() - current_pose_.x, cy_.back() - current_pose_.y);
+    if (goal_dist < config_.goal_threshold) {
+        std_msgs::msg::Bool goal_msg;
+        goal_msg.data = true;
+        goal_status_pub_->publish(goal_msg);
+    }
 }
 
 }  // namespace pure_pursuit_planner
